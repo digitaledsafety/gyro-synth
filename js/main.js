@@ -12,6 +12,8 @@
       let beta = 0; // Device orientation values (pitch)
       let gamma = 0; // Device orientation values (panning)
       let panner = null; // Stereo panner for spatial audio
+      let recorder = null; // Tone.Recorder instance
+      let isRecording = false; // Recording state
       const maxFrequency = 880; // Maximum frequency for the oscillator/synth (approx A5)
 
       // --- Scale-related Global Variables and Definitions ---
@@ -31,7 +33,10 @@
         'Phrygian Minor': { intervals: [0, 1, 3, 5, 7, 8, 10] },
         'Mixolydian': { intervals: [0, 2, 4, 5, 7, 9, 10] },
         'Aeolian': { intervals: [0, 2, 3, 5, 7, 8, 10] },
-        'Locrian': { intervals: [0, 1, 3, 5, 6, 8, 10] }
+        'Locrian': { intervals: [0, 1, 3, 5, 6, 8, 10] },
+        'In Sen': { intervals: [0, 1, 5, 7, 10] },
+        'Japanese': { intervals: [0, 1, 5, 7, 8] },
+        'Hungarian Minor': { intervals: [0, 2, 3, 6, 7, 8, 11] }
       };
 
       let generatedScaleFrequencies = []; // Cache for frequencies of the current scale
@@ -174,7 +179,43 @@
         waveformAnalyzer = new Tone.Waveform(1024); // 1024 samples for the waveform
         panner.connect(waveformAnalyzer);
 
+        // Initialize recorder and connect master output to it
+        recorder = new Tone.Recorder();
+        Tone.Destination.connect(recorder);
+
         //console.log("Tone.js audio context ready to start on interaction.");
+      }
+
+      // Function to handle recording toggle
+      async function toggleRecording() {
+        if (!recorder) return;
+
+        const recordBtn = document.getElementById('recordBtn');
+
+        if (!isRecording) {
+            // Start recording
+            recorder.start();
+            isRecording = true;
+            recordBtn.textContent = 'Stop';
+            recordBtn.classList.replace('bg-green-600', 'bg-red-600');
+            recordBtn.classList.replace('hover:bg-green-700', 'hover:bg-red-700');
+            //console.log("Recording started...");
+        } else {
+            // Stop recording
+            const recording = await recorder.stop();
+            isRecording = false;
+            recordBtn.textContent = 'Record';
+            recordBtn.classList.replace('bg-red-600', 'bg-green-600');
+            recordBtn.classList.replace('hover:bg-red-700', 'hover:bg-green-700');
+
+            // Create a download link for the recording
+            const url = URL.createObjectURL(recording);
+            const anchor = document.createElement("a");
+            anchor.download = `gyro-synth-recording-${Date.now()}.webm`;
+            anchor.href = url;
+            anchor.click();
+            //console.log("Recording stopped and saved.");
+        }
       }
 
       // Function to stop all active sounds and clear Tone.js transport
@@ -504,6 +545,7 @@
         const releaseSlider = document.getElementById('releaseSlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
         const clearAllBtn = document.getElementById('clearAllBtn');
+        const recordBtn = document.getElementById('recordBtn');
         const settingsModal = document.getElementById('settingsModal');
         const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 
@@ -562,7 +604,23 @@
 
         scaleSelect.addEventListener('change', updateScaleSettings);
         rootNoteSelect.addEventListener('change', updateScaleSettings);
-        waveformSelect.addEventListener('change', () => clearSounds()); // Reset sounds when waveform changes
+        waveformSelect.addEventListener('change', () => {
+            const newType = waveformSelect.value;
+            // Update continuous instrument if it exists
+            if (instrument && instrument.oscillator) {
+                instrument.oscillator.type = newType;
+            }
+            // Update preview loop synth if it exists
+            if (previewLoop && previewLoop.synth && previewLoop.synth.oscillator) {
+                previewLoop.synth.oscillator.type = newType;
+            }
+            // Update all saved loops synths
+            savedLoops.forEach(loop => {
+                if (loop.synth && loop.synth.oscillator) {
+                    loop.synth.oscillator.type = newType;
+                }
+            });
+        });
         volumeSlider.addEventListener('input', (e) => {
             userVolume = parseFloat(e.target.value);
             updateMasterVolume();
@@ -580,6 +638,7 @@
             }
         });
         clearAllBtn.addEventListener('click', () => clearSounds());
+        recordBtn.addEventListener('click', () => toggleRecording());
         closeSettingsBtn.addEventListener('click', hideSettings);
         settingsModal.addEventListener('click', (e) => {
             if (e.target === settingsModal) hideSettings();
@@ -649,6 +708,7 @@
           const touchCount = activePointers.size;
           pressTimer = setTimeout(() => {
             isLongPress = true;
+            if (navigator.vibrate) navigator.vibrate(20); // Short haptic feedback
             if (touchCount >= 2) {
                 showSettings();
             } else {
@@ -670,10 +730,12 @@
             const currentTime = performance.now(); // Use performance.now() for UI event timing
             if (currentTime - lastTapTime < doubleTapThreshold) {
                 // This is a double tap
+                if (navigator.vibrate) navigator.vibrate([30, 30, 30]); // Distinct double pulse
                 clearSounds();
                 lastTapTime = 0; // Reset to prevent triple taps from being double taps
             } else {
                 // This is a single tap (or the first tap of a potential double tap)
+                if (navigator.vibrate) navigator.vibrate(10); // Light haptic feedback
                 if (instrument || previewLoop || savedLoops.length > 0) { // If any sound is currently active
                     addFixedLoop(); // Add a fixed loop, allowing existing sounds to continue
                 } else {
@@ -707,7 +769,7 @@
         requestWakeLock();
         // Re-acquire wake lock when the page becomes visible again
         document.addEventListener('visibilitychange', async () => {
-          if (wakeLock !== null && document.visibilityState === 'visible') {
+          if (document.visibilityState === 'visible') {
             await requestWakeLock();
           }
         });
