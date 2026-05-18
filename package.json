@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@playwright/browser-chromium": "^1.60.0",
+    "@playwright/test": "^1.60.0"
+  }
+}
