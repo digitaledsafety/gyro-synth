@@ -1,13 +1,7 @@
-// Global variables for audio instruments, loops, and device orientation
-      let instrument = null; // Main oscillator for single continuous note (long press)
-      let previewLoop = null; // Tone.Loop for the pulsing preview sound
-      let savedLoops = []; // Array to store multiple Tone.Loop instances (fixed tones from subsequent short taps)
-      let masterBus = null; // Central gain node for effects routing
-      let delayNode = null; // Feedback delay effect
-      let attackTime = 0.1; // Synth attack time
-      let releaseTime = 0.5; // Synth release time
-      let delayWet = 0.3; // Delay effect wet level
-      let userVolume = 0.8; // User-defined volume (0.0 to 1.0)
+      // Global variable for the audio engine
+      const audioEngine = new AudioEngine();
+      let visualizer = null;
+      let interactionHandler = null;
       let wakeLock = null; // Screen wake lock object
       let beta = 0; // Device orientation values (pitch)
       let gamma = 0; // Device orientation values (panning)
@@ -431,112 +425,23 @@
 
 
       // Function to request a screen wake lock
-      // This prevents the screen from dimming or turning off while the app is in use.
       async function requestWakeLock() {
         try {
-          wakeLock = await navigator.wakeLock.request('screen');
-          //console.log('Wake Lock acquired');
-
-          // Add a listener for the release event
-          wakeLock.addEventListener('release', () => {
-            //console.log('Wake Lock released');
-            wakeLock = null;
-          });
-        } catch (err) {
-          // Handle errors, e.g., if the user denies permission
-          console.error('Error acquiring wake lock:', err);
-        }
-      }
-
-      // D3.js color scale for the bars (from blue to red based on amplitude)
-      const colorScale = d3.scaleLinear()
-                           .domain([0, 0.5, 1]) // Amplitude range
-                           .range(["#3498db", "#f1c40f", "#e74c3c"]); // Blue, Yellow, Red
-
-      // Function to update the D3.js bar graph visualization
-      function updateWaveformVisualization() {
-        if (!waveformAnalyzer || !waveformSvg) {
-          requestAnimationFrame(updateWaveformVisualization);
-          return;
-        }
-
-        // Get the waveform data from the analyzer
-        const waveformArray = waveformAnalyzer.getValue();
-
-        // Get current SVG dimensions
-        const svgWidth = waveformSvg.node().clientWidth;
-        const svgHeight = waveformSvg.node().clientHeight;
-
-        // Dynamic minimum bar height based on SVG height
-        const minBarHeight = svgHeight * 0.01; // 1% of SVG height
-
-        // Calculate samples per bar and bar width
-        const samplesPerBar = Math.floor(waveformArray.length / barCount);
-        const barWidth = svgWidth / barCount;
-
-        // Prepare data for bars (average amplitude for each segment)
-        const barData = [];
-        const visualGain = 2.0; // Factor to visually amplify low signals
-        for (let i = 0; i < barCount; i++) {
-          let sum = 0;
-          for (let j = 0; j < samplesPerBar; j++) {
-            // Apply visualGain here to amplify for visualization, and clamp to 1.0
-            sum += Math.min(1.0, Math.abs(waveformArray[i * samplesPerBar + j]) * visualGain);
+          if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+            wakeLock.addEventListener('release', () => {
+              wakeLock = null;
+            });
           }
-          barData.push(sum / samplesPerBar); // Average amplitude for the bar
-        }
-
-        // D3 update pattern for rectangles
-        const bars = waveformSvg.selectAll(".bar") // Select by class now
-          .data(barData);
-
-        // Enter new bars
-        bars.enter().append("rect")
-          .attr("class", "bar") // Assign class for styling
-          .attr("x", (d, i) => i * barWidth)
-          .attr("width", barWidth * 0.8) // Slightly smaller width for gaps
-          .merge(bars) // Merge enter and update selections
-          // Removed transition for real-time performance
-          .attr("x", (d, i) => i * barWidth + (barWidth * 0.1)) // Adjust x for centering with gap
-          // Ensure bars have a minimum height and are positioned from the bottom
-          .attr("y", d => svgHeight - Math.max(minBarHeight, d * svgHeight))
-          .attr("height", d => Math.max(minBarHeight, d * svgHeight))
-          .attr("fill", d => colorScale(d)); // 'd' is the amplitude value for each bar
-        // Exit old bars
-        bars.exit().remove();
-
-        // Throttled real-time frequency/note display update
-        const freq = getNormalizedValue();
-        const display = document.getElementById('frequencyDisplay');
-        if (display) {
-          const note = Tone.Frequency(freq).toNote();
-          display.textContent = `${freq.toFixed(2)} Hz (${note})`;
-        }
-
-        // Request the next frame
-        requestAnimationFrame(updateWaveformVisualization);
-      }
-
-      // Handle SVG resizing
-      function resizeSvg() {
-        if (waveformSvg) {
-          const svgElement = waveformSvg.node();
-          const width = window.innerWidth; // Use window dimensions for full screen
-          const height = window.innerHeight;
-
-          // Update SVG viewbox to match new dimensions
-          waveformSvg.attr("viewBox", `0 0 ${width} ${height}`)
-                     .attr("width", width)
-                     .attr("height", height);
-
-          // Update D3 scales ranges (though not directly used for bars, good practice)
-          xScale.range([0, width]);
-          yScale.range([height, 0]);
+        } catch (err) {
+          console.error('Error acquiring wake lock:', err);
         }
       }
 
       // Main script execution when the DOM is fully loaded
       document.addEventListener('DOMContentLoaded', () => {
+        visualizer = new Visualizer(audioEngine);
+        interactionHandler = new InteractionHandler(audioEngine, visualizer);
         const rootNoteSelect = document.getElementById('rootNoteSelect');
         const scaleSelect = document.getElementById('scaleSelect');
         const waveformSelect = document.getElementById('waveformSelect');
@@ -569,14 +474,16 @@
         resizeSvg();
         window.addEventListener('resize', resizeSvg);
 
-        // Populate scale dropdown
-        for (const scaleName in availableScales) {
+        // Populate scale dropdown (InteractionHandler also does this but we need it here for initial setup if not handled there)
+        const scaleSelect = document.getElementById('scaleSelect');
+        for (const scaleName in audioEngine.availableScales) {
           const option = document.createElement('option');
           option.value = scaleName;
           option.textContent = scaleName;
           scaleSelect.appendChild(option);
         }
-        scaleSelect.value = 'Off'; // Set default to 'Off'
+        scaleSelect.value = 'Off';
+        document.getElementById('rootNoteSelect').disabled = true;
 
         // --- Event Listener for Scale Controls ---
         function showSettings() {
@@ -774,16 +681,11 @@
           }
         });
 
-        startSounds(); // Prepare Tone.js, but don't start audio context yet
-        updateWaveformVisualization(); // Start the D3 visualization loop
-        updateMasterVolume(); // Initial volume update on load
+        audioEngine.init();
+        audioEngine.updateMasterVolume();
 
-        // Keyboard shortcuts
-        window.addEventListener("keydown", (e) => {
-            if (e.key.toLowerCase() === "m") {
-                showSettings();
-            } else if (e.key === "Escape") {
-                hideSettings();
-            }
+        // Additional listener for startButton to acquire wake lock
+        document.getElementById('startButton').addEventListener('click', () => {
+            requestWakeLock();
         });
       });
