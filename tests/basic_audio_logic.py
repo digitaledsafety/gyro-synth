@@ -37,7 +37,7 @@ def test_js_logic_integrity():
     if 'new Tone.Reverb' not in content:
         print("Missing Tone.Reverb")
         return False
-    if 'await reverb.ready' not in content:
+    if 'await reverb.ready' not in content and 'await this.reverbNode.ready' not in content:
         print("Missing await reverb.ready")
         return False
 

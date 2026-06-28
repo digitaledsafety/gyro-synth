@@ -16,7 +16,10 @@ def test_new_params_and_ui():
     new_ui_elements = [
         'id="attackSlider"',
         'id="releaseSlider"',
+        'id="reverbWetSlider"',
+        'id="reverbDecaySlider"',
         'id="delayWetSlider"',
+        'id="delayTimeSelect"',
         'id="synthTypeSelect"'
     ]
     for element in new_ui_elements:
@@ -28,7 +31,10 @@ def test_new_params_and_ui():
     listeners = [
         'attackSlider.addEventListener',
         'releaseSlider.addEventListener',
-        'delayWetSlider.addEventListener'
+        'delayWetSlider.addEventListener',
+        'delayTimeSelect.addEventListener',
+        'reverbWetSlider.addEventListener',
+        'reverbDecaySlider.addEventListener'
     ]
     for listener in listeners:
         if listener not in js_content:
