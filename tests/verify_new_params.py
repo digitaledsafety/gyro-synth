@@ -17,7 +17,8 @@ def test_new_params_and_ui():
         'id="attackSlider"',
         'id="releaseSlider"',
         'id="delayWetSlider"',
-        'id="synthTypeSelect"'
+        'id="synthTypeSelect"',
+        'id="vizModeSelect"'
     ]
     for element in new_ui_elements:
         if element not in html_content:
@@ -28,7 +29,8 @@ def test_new_params_and_ui():
     listeners = [
         'attackSlider.addEventListener',
         'releaseSlider.addEventListener',
-        'delayWetSlider.addEventListener'
+        'delayWetSlider.addEventListener',
+        'vizModeSelect.addEventListener'
     ]
     for listener in listeners:
         if listener not in js_content:

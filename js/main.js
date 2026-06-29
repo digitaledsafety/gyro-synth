@@ -56,7 +56,9 @@
           }
         });
 
-        audioEngine.init();
+        audioEngine.init().then(() => {
+          if (visualizer) visualizer.resize();
+        });
         audioEngine.updateMasterVolume();
 
         // Additional listener for startButton to acquire wake lock

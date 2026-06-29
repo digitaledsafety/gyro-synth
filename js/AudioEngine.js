@@ -11,6 +11,7 @@ class AudioEngine {
         this.delayNode = null; // Feedback delay effect
         this.panner = null; // Stereo panner
         this.waveformAnalyzer = null; // Tone.Waveform analyzer
+        this.spectrumAnalyzer = null; // Tone.FFT analyzer
 
         this.attackTime = 0.1;
         this.releaseTime = 0.5;
@@ -66,6 +67,9 @@ class AudioEngine {
 
         this.waveformAnalyzer = new Tone.Waveform(1024);
         this.panner.connect(this.waveformAnalyzer);
+
+        this.spectrumAnalyzer = new Tone.FFT(1024);
+        Tone.Destination.connect(this.spectrumAnalyzer);
 
         this.updateMasterVolume();
     }
