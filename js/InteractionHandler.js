@@ -28,8 +28,10 @@ class InteractionHandler {
         const svg = this.visualizer.waveformSvg;
 
         svg.on("pointerdown", (event) => {
+            if (this.activePointers.size === 0) {
+                this.isLongPress = false;
+            }
             this.activePointers.add(event.pointerId);
-            this.isLongPress = false;
             this.visualizer.createRipple(event.clientX, event.clientY);
 
             const timer = setTimeout(() => {
@@ -139,6 +141,7 @@ class InteractionHandler {
         const rootNoteSelect = document.getElementById('rootNoteSelect');
         const synthTypeSelect = document.getElementById('synthTypeSelect');
         const waveformSelect = document.getElementById('waveformSelect');
+        const vizModeSelect = document.getElementById('vizModeSelect');
         const volumeSlider = document.getElementById('volumeSlider');
         const attackSlider = document.getElementById('attackSlider');
         const releaseSlider = document.getElementById('releaseSlider');
@@ -153,6 +156,9 @@ class InteractionHandler {
         rootNoteSelect.addEventListener('change', updateScaleSettings);
         synthTypeSelect.addEventListener('change', () => this.audioEngine.clearSounds());
         waveformSelect.addEventListener('change', () => this.audioEngine.clearSounds());
+        vizModeSelect.addEventListener('change', (e) => {
+            this.visualizer.vizMode = e.target.value;
+        });
         volumeSlider.addEventListener('input', (e) => this.audioEngine.setUserVolume(parseFloat(e.target.value)));
         attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
         releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
