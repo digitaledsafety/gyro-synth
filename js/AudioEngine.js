@@ -9,12 +9,15 @@ class AudioEngine {
         this.savedLoops = []; // Array to store multiple Tone.Loop instances
         this.masterBus = null; // Central gain node
         this.delayNode = null; // Feedback delay effect
+        this.reverbNode = null; // Reverb effect
         this.panner = null; // Stereo panner
         this.waveformAnalyzer = null; // Tone.Waveform analyzer
 
         this.attackTime = 0.1;
         this.releaseTime = 0.5;
         this.delayWet = 0.3;
+        this.reverbWet = 0.3;
+        this.reverbDecay = 2;
         this.userVolume = 0.8;
         this.maxFrequency = 880;
 
@@ -41,7 +44,6 @@ class AudioEngine {
         };
     }
 
-    /**
      * Initializes the audio graph and effects.
      */
     async init() {
@@ -55,14 +57,14 @@ class AudioEngine {
             release: 0.25
         });
         const lowBump = new Tone.Filter(200, "lowshelf");
-        const reverb = new Tone.Reverb({ decay: 2, wet: 0.3 });
-        await reverb.ready;
+        this.reverbNode = new Tone.Reverb({ decay: this.reverbDecay, wet: this.reverbWet });
+        await this.reverbNode.ready;
 
         this.delayNode = new Tone.FeedbackDelay("8n", 0.5);
         this.delayNode.wet.value = this.delayWet;
 
         this.panner = new Tone.Panner(0).toDestination();
-        this.masterBus.chain(lowBump, masterCompressor, reverb, this.delayNode, this.panner);
+        this.masterBus.chain(lowBump, masterCompressor, this.reverbNode, this.delayNode, this.panner);
 
         this.waveformAnalyzer = new Tone.Waveform(1024);
         this.panner.connect(this.waveformAnalyzer);
@@ -105,9 +107,9 @@ class AudioEngine {
     /**
      * Creates a new synth instance.
      */
-    createSynth() {
-        const selectedWaveform = document.getElementById('waveformSelect').value;
-        const synthType = document.getElementById('synthTypeSelect').value;
+    createSynth(waveform = null, synthType = null) {
+        const selectedWaveform = waveform || document.getElementById('waveformSelect').value;
+        const selectedSynthType = synthType || document.getElementById('synthTypeSelect').value;
 
         const settings = {
             oscillator: { type: selectedWaveform },
@@ -118,7 +120,7 @@ class AudioEngine {
         };
 
         let synth;
-        switch (synthType) {
+        switch (selectedSynthType) {
             case 'AMSynth':
                 synth = new Tone.AMSynth(settings);
                 break;
@@ -135,6 +137,35 @@ class AudioEngine {
         }
 
         return synth.connect(this.masterBus);
+    }
+
+    /**
+     * Updates the synth type of all active synths.
+     * Note: This currently clears sounds as switching synth classes mid-note is complex.
+     */
+    updateSynthType(type) {
+        this.clearSounds();
+    }
+
+    /**
+     * Updates the waveform of all active synths in real-time.
+     */
+    updateWaveform(waveform) {
+        const updateOscillator = (synth) => {
+            if (synth.oscillator) {
+                synth.oscillator.type = waveform;
+            } else if (synth.voice0 && synth.voice1) {
+                // For DuoSynth
+                synth.voice0.oscillator.type = waveform;
+                synth.voice1.oscillator.type = waveform;
+            }
+        };
+
+        if (this.instrument) updateOscillator(this.instrument);
+        if (this.previewLoop && this.previewLoop.synth) updateOscillator(this.previewLoop.synth);
+        this.savedLoops.forEach(loop => {
+            if (loop.synth) updateOscillator(loop.synth);
+        });
     }
 
     /**
@@ -316,6 +347,21 @@ class AudioEngine {
     setDelayWet(value) {
         this.delayWet = value;
         if (this.delayNode) this.delayNode.wet.rampTo(this.delayWet, 0.1);
+    }
+    setDelayTime(value) {
+        if (this.delayNode) this.delayNode.delayTime.rampTo(value, 0.1);
+    }
+    setReverbWet(value) {
+        this.reverbWet = value;
+        if (this.reverbNode) this.reverbNode.wet.rampTo(this.reverbWet, 0.1);
+    }
+    async setReverbDecay(value) {
+        this.reverbDecay = value;
+        if (this.reverbNode) {
+            this.reverbNode.decay = value;
+            // Tone.Reverb decay update might need ready await
+            await this.reverbNode.ready;
+        }
     }
     setUserVolume(value) {
         this.userVolume = value;
