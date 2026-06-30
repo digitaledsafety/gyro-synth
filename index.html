@@ -175,6 +175,7 @@
           </div>
         </div>
 
+        <div class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest border-b border-gray-100">Core Sound</div>
         <div class="mb-4 flex space-x-2">
           <div class="w-1/2">
             <label for="synthTypeSelect" class="modal-label">Synth Type</label>
@@ -196,11 +197,6 @@
           </div>
         </div>
 
-        <div class="mb-4">
-          <label for="volumeSlider" class="modal-label">Master Volume</label>
-          <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.8" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-        </div>
-
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label for="attackSlider" class="modal-label">Attack</label>
@@ -210,10 +206,39 @@
             <label for="releaseSlider" class="modal-label">Release</label>
             <input type="range" id="releaseSlider" min="0.1" max="5" step="0.1" value="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
           </div>
-          <div class="col-span-2">
+        </div>
+
+        <div class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest border-b border-gray-100 mt-6">Effects</div>
+        <div class="mb-4 flex space-x-2">
+          <div class="w-1/2">
             <label for="delayWetSlider" class="modal-label">Delay Wet</label>
             <input type="range" id="delayWetSlider" min="0" max="1" step="0.01" value="0.3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
           </div>
+          <div class="w-1/2">
+            <label for="delayTimeSelect" class="modal-label">Delay Time</label>
+            <select id="delayTimeSelect" title="Select Delay Time" aria-label="Select Delay Time">
+              <option value="4n">1/4</option>
+              <option value="8n" selected>1/8</option>
+              <option value="16n">1/16</option>
+              <option value="32n">1/32</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <label for="reverbWetSlider" class="modal-label">Reverb Wet</label>
+            <input type="range" id="reverbWetSlider" min="0" max="1" step="0.01" value="0.3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+          </div>
+          <div>
+            <label for="reverbDecaySlider" class="modal-label">Reverb Decay</label>
+            <input type="range" id="reverbDecaySlider" min="0.1" max="10" step="0.1" value="2" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="volumeSlider" class="modal-label">Master Volume</label>
+          <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.8" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
         </div>
 
         <div class="mb-6">
