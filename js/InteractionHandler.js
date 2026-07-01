@@ -12,7 +12,7 @@ class InteractionHandler {
         this.isLongPress = false;
         this.lastTapTime = 0;
         this.doubleTapThreshold = 300;
-        this.activePointers = new Set();
+        this.activePointers = new Map();
 
         this.init();
     }
@@ -27,13 +27,26 @@ class InteractionHandler {
     setupPointerEvents() {
         const svg = this.visualizer.waveformSvg;
 
-        svg.on("pointerdown", (event) => {
-            this.activePointers.add(event.pointerId);
+        svg.on("pointerdown", async (event) => {
+            await this.audioEngine.init();
+            const startTime = performance.now();
+            this.activePointers.set(event.pointerId, {
+                startTime: startTime,
+                startX: event.clientX,
+                startY: event.clientY
+            });
+
             this.isLongPress = false;
             this.visualizer.createRipple(event.clientX, event.clientY);
 
+            // Clear any existing press timers to ensure only the most recent one can trigger
+            for (const timer of this.pressTimers.values()) {
+                clearTimeout(timer);
+            }
+            this.pressTimers.clear();
+
             const timer = setTimeout(() => {
-                if (this.isLongPress) return;
+                if (this.activePointers.size === 0) return;
                 this.isLongPress = true;
                 if (this.activePointers.size >= 2) {
                     this.showSettings();
@@ -45,7 +58,9 @@ class InteractionHandler {
         });
 
         svg.on("pointerup", (event) => {
+            const pointerData = this.activePointers.get(event.pointerId);
             this.activePointers.delete(event.pointerId);
+
             const timer = this.pressTimers.get(event.pointerId);
             if (timer) {
                 clearTimeout(timer);
@@ -57,18 +72,23 @@ class InteractionHandler {
                 return;
             }
 
-            if (this.activePointers.size === 0) {
-                const currentTime = performance.now();
-                if (currentTime - this.lastTapTime < this.doubleTapThreshold) {
-                    this.audioEngine.clearSounds();
-                    this.lastTapTime = 0;
-                } else {
-                    if (this.audioEngine.instrument || this.audioEngine.previewLoop || this.audioEngine.savedLoops.length > 0) {
-                        this.audioEngine.addFixedLoop();
+            if (this.activePointers.size === 0 && pointerData) {
+                const duration = performance.now() - pointerData.startTime;
+
+                // Only consider it a tap if it was short enough
+                if (duration < this.longPressDuration) {
+                    const currentTime = performance.now();
+                    if (currentTime - this.lastTapTime < this.doubleTapThreshold) {
+                        this.audioEngine.clearSounds();
+                        this.lastTapTime = 0;
                     } else {
-                        this.audioEngine.startPreviewLoop();
+                        if (this.audioEngine.instrument || this.audioEngine.previewLoop || this.audioEngine.savedLoops.length > 0) {
+                            this.audioEngine.addFixedLoop();
+                        } else {
+                            this.audioEngine.startPreviewLoop();
+                        }
+                        this.lastTapTime = currentTime;
                     }
-                    this.lastTapTime = currentTime;
                 }
             }
             event.preventDefault();
@@ -117,6 +137,7 @@ class InteractionHandler {
 
         startButton.addEventListener('click', async () => {
             await Tone.start();
+            await this.audioEngine.init();
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 try {
                     await DeviceOrientationEvent.requestPermission();

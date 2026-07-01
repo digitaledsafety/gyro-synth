@@ -56,8 +56,9 @@
           }
         });
 
+        // Initialization of audio engine now handled asynchronously via user interaction
+        // but we trigger an initial call here; it will also be awaited in interaction handlers.
         audioEngine.init();
-        audioEngine.updateMasterVolume();
 
         // Additional listener for startButton to acquire wake lock
         document.getElementById('startButton').addEventListener('click', () => {
