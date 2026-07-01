@@ -19,7 +19,11 @@ class Visualizer {
 
     init() {
         this.resize();
-        window.addEventListener('resize', () => this.resize());
+        this.createBars();
+        window.addEventListener('resize', () => {
+            this.resize();
+            this.updateBarPositions();
+        });
         this.update();
     }
 
@@ -35,6 +39,24 @@ class Visualizer {
             this.xScale.range([0, width]);
             this.yScale.range([height, 0]);
         }
+    }
+
+    createBars() {
+        const barData = new Array(this.barCount).fill(0);
+        this.barsSelection = this.waveformSvg.selectAll(".bar")
+            .data(barData)
+            .enter()
+            .append("rect")
+            .attr("class", "bar");
+        this.updateBarPositions();
+    }
+
+    updateBarPositions() {
+        const svgWidth = this.waveformSvg.node().clientWidth;
+        const barWidth = svgWidth / this.barCount;
+        this.barsSelection
+            .attr("x", (d, i) => i * barWidth + (barWidth * 0.1))
+            .attr("width", barWidth * 0.8);
     }
 
     createRipple(x, y) {
@@ -72,8 +94,6 @@ class Visualizer {
         const svgHeight = this.waveformSvg.node().clientHeight;
         const minBarHeight = svgHeight * 0.01;
         const samplesPerBar = Math.floor(waveformArray.length / this.barCount);
-        const barWidth = svgWidth / this.barCount;
-
         const barData = [];
         const visualGain = 2.0;
         for (let i = 0; i < this.barCount; i++) {
@@ -84,19 +104,10 @@ class Visualizer {
             barData.push(sum / samplesPerBar);
         }
 
-        const bars = this.waveformSvg.selectAll(".bar").data(barData);
-
-        bars.enter().append("rect")
-            .attr("class", "bar")
-            .attr("x", (d, i) => i * barWidth)
-            .attr("width", barWidth * 0.8)
-            .merge(bars)
-            .attr("x", (d, i) => i * barWidth + (barWidth * 0.1))
+        this.barsSelection.data(barData)
             .attr("y", d => svgHeight - Math.max(minBarHeight, d * svgHeight))
             .attr("height", d => Math.max(minBarHeight, d * svgHeight))
             .attr("fill", d => this.colorScale(d));
-
-        bars.exit().remove();
 
         const freq = this.audioEngine.getNormalizedFrequency();
         const display = document.getElementById('frequencyDisplay');

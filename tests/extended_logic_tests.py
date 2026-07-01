@@ -31,7 +31,7 @@ def test_extended_js_logic():
         return False
 
     # Check for activePointers
-    if 'this.activePointers = new Set();' not in content and 'let activePointers = new Set();' not in content:
+    if 'this.activePointers = new Map();' not in content and 'let activePointers = new Map();' not in content:
         print("Missing activePointers initialization")
         return False
 

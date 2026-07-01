@@ -1,6 +1,9 @@
 const CACHE_NAME = 'gyro-synth-cache-v1';
 const urlsToCache = [
   'index.html',
+  'js/AudioEngine.js',
+  'js/Visualizer.js',
+  'js/InteractionHandler.js',
   'js/main.js',
   'https://unpkg.com/tone',
   'https://cdn.tailwindcss.com',
