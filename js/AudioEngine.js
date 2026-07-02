@@ -194,19 +194,28 @@ class AudioEngine {
         Tone.getTransport().cancel();
         Tone.getTransport().clear();
 
+        const disposeNode = (node) => {
+            if (node) {
+                if (node.triggerRelease) {
+                    node.triggerRelease();
+                    setTimeout(() => {
+                        try { node.dispose(); } catch (e) {}
+                    }, this.releaseTime * 1000 + 100);
+                } else {
+                    try { node.dispose(); } catch (e) {}
+                }
+            }
+        };
+
         if (this.instrument) {
-            this.instrument.triggerRelease();
-            const toDispose = this.instrument;
-            setTimeout(() => toDispose.dispose(), this.releaseTime * 1000 + 100);
+            disposeNode(this.instrument);
             this.instrument = null;
         }
 
         if (this.previewLoop) {
             this.previewLoop.stop();
             if (this.previewLoop.synth) {
-                this.previewLoop.synth.triggerRelease();
-                const toDispose = this.previewLoop.synth;
-                setTimeout(() => toDispose.dispose(), this.releaseTime * 1000 + 100);
+                disposeNode(this.previewLoop.synth);
             }
             this.previewLoop.dispose();
             this.previewLoop = null;
@@ -215,9 +224,7 @@ class AudioEngine {
         this.savedLoops.forEach(loop => {
             loop.stop();
             if (loop.synth) {
-                loop.synth.triggerRelease();
-                const toDispose = loop.synth;
-                setTimeout(() => toDispose.dispose(), this.releaseTime * 1000 + 100);
+                disposeNode(loop.synth);
             }
             loop.dispose();
         });
