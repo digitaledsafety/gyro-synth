@@ -197,6 +197,14 @@
         </div>
 
         <div class="mb-4">
+          <label for="visModeSelect" class="modal-label">Visualization Mode</label>
+          <select id="visModeSelect" title="Select Visualization Mode" aria-label="Select Visualization Mode">
+            <option value="waveform">Waveform (Time Domain)</option>
+            <option value="fft">Frequency Spectrum (FFT)</option>
+          </select>
+        </div>
+
+        <div class="mb-4">
           <label for="volumeSlider" class="modal-label">Master Volume</label>
           <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.8" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
         </div>
