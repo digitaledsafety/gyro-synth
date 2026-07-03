@@ -19,7 +19,7 @@
       }
 
       // Main script execution when the DOM is fully loaded
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('DOMContentLoaded', async () => {
         visualizer = new Visualizer(audioEngine);
         interactionHandler = new InteractionHandler(audioEngine, visualizer);
 
@@ -56,7 +56,8 @@
           }
         });
 
-        audioEngine.init();
+        await audioEngine.init();
+        visualizer.resize();
         audioEngine.updateMasterVolume();
 
         // Additional listener for startButton to acquire wake lock

@@ -139,6 +139,7 @@ class InteractionHandler {
         const rootNoteSelect = document.getElementById('rootNoteSelect');
         const synthTypeSelect = document.getElementById('synthTypeSelect');
         const waveformSelect = document.getElementById('waveformSelect');
+        const visModeSelect = document.getElementById('visModeSelect');
         const volumeSlider = document.getElementById('volumeSlider');
         const attackSlider = document.getElementById('attackSlider');
         const releaseSlider = document.getElementById('releaseSlider');
@@ -153,6 +154,9 @@ class InteractionHandler {
         rootNoteSelect.addEventListener('change', updateScaleSettings);
         synthTypeSelect.addEventListener('change', () => this.audioEngine.clearSounds());
         waveformSelect.addEventListener('change', () => this.audioEngine.clearSounds());
+        visModeSelect.addEventListener('change', (e) => {
+            this.visualizer.visMode = e.target.value;
+        });
         volumeSlider.addEventListener('input', (e) => this.audioEngine.setUserVolume(parseFloat(e.target.value)));
         attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
         releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
