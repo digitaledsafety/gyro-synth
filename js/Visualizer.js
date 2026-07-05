@@ -14,6 +14,11 @@ class Visualizer {
         this.xScale = d3.scaleLinear().domain([0, this.barCount - 1]);
         this.yScale = d3.scaleLinear().domain([0, 1]);
 
+        // Cached dimensions to avoid DOM queries in the update loop
+        this.svgWidth = 0;
+        this.svgHeight = 0;
+        this.barWidth = 0;
+
         this.init();
     }
 
@@ -25,15 +30,16 @@ class Visualizer {
 
     resize() {
         if (this.waveformSvg) {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
+            this.svgWidth = window.innerWidth;
+            this.svgHeight = window.innerHeight;
 
-            this.waveformSvg.attr("viewBox", `0 0 ${width} ${height}`)
-                .attr("width", width)
-                .attr("height", height);
+            this.waveformSvg.attr("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`)
+                .attr("width", this.svgWidth)
+                .attr("height", this.svgHeight);
 
-            this.xScale.range([0, width]);
-            this.yScale.range([height, 0]);
+            this.xScale.range([0, this.svgWidth]);
+            this.yScale.range([this.svgHeight, 0]);
+            this.barWidth = this.svgWidth / this.barCount;
         }
     }
 
@@ -68,11 +74,8 @@ class Visualizer {
         }
 
         const waveformArray = this.audioEngine.waveformAnalyzer.getValue();
-        const svgWidth = this.waveformSvg.node().clientWidth;
-        const svgHeight = this.waveformSvg.node().clientHeight;
-        const minBarHeight = svgHeight * 0.01;
+        const minBarHeight = this.svgHeight * 0.01;
         const samplesPerBar = Math.floor(waveformArray.length / this.barCount);
-        const barWidth = svgWidth / this.barCount;
 
         const barData = [];
         const visualGain = 2.0;
@@ -88,12 +91,12 @@ class Visualizer {
 
         bars.enter().append("rect")
             .attr("class", "bar")
-            .attr("x", (d, i) => i * barWidth)
-            .attr("width", barWidth * 0.8)
+            .attr("x", (d, i) => i * this.barWidth)
+            .attr("width", this.barWidth * 0.8)
             .merge(bars)
-            .attr("x", (d, i) => i * barWidth + (barWidth * 0.1))
-            .attr("y", d => svgHeight - Math.max(minBarHeight, d * svgHeight))
-            .attr("height", d => Math.max(minBarHeight, d * svgHeight))
+            .attr("x", (d, i) => i * this.barWidth + (this.barWidth * 0.1))
+            .attr("y", d => this.svgHeight - Math.max(minBarHeight, d * this.svgHeight))
+            .attr("height", d => Math.max(minBarHeight, d * this.svgHeight))
             .attr("fill", d => this.colorScale(d));
 
         bars.exit().remove();
