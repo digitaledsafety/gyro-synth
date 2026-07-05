@@ -19,8 +19,12 @@
       }
 
       // Main script execution when the DOM is fully loaded
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('DOMContentLoaded', async () => {
+        await audioEngine.init();
+
         visualizer = new Visualizer(audioEngine);
+        visualizer.resize(); // Ensure cached dimensions are accurate
+
         interactionHandler = new InteractionHandler(audioEngine, visualizer);
 
         // Populate scale dropdown (InteractionHandler also does this but we need it here for initial setup if not handled there)
@@ -56,7 +60,6 @@
           }
         });
 
-        audioEngine.init();
         audioEngine.updateMasterVolume();
 
         // Additional listener for startButton to acquire wake lock

@@ -28,16 +28,24 @@ class InteractionHandler {
         const svg = this.visualizer.waveformSvg;
 
         svg.on("pointerdown", (event) => {
+            // Clear any existing timers to prevent multiple triggers for multi-touch
+            this.pressTimers.forEach((timer) => clearTimeout(timer));
+            this.pressTimers.clear();
+
             this.activePointers.add(event.pointerId);
-            this.isLongPress = false;
+            if (this.activePointers.size === 1) {
+                this.isLongPress = false;
+            }
             this.visualizer.createRipple(event.clientX, event.clientY);
 
             const timer = setTimeout(() => {
-                if (this.isLongPress) return;
-                this.isLongPress = true;
+                if (this.isLongPress && this.activePointers.size < 2) return;
+
                 if (this.activePointers.size >= 2) {
+                    this.isLongPress = true;
                     this.showSettings();
-                } else {
+                } else if (!this.isLongPress) {
+                    this.isLongPress = true;
                     this.audioEngine.toggleContinuousNote();
                 }
             }, this.longPressDuration);
@@ -45,12 +53,13 @@ class InteractionHandler {
         });
 
         svg.on("pointerup", (event) => {
-            this.activePointers.delete(event.pointerId);
             const timer = this.pressTimers.get(event.pointerId);
             if (timer) {
                 clearTimeout(timer);
                 this.pressTimers.delete(event.pointerId);
             }
+
+            this.activePointers.delete(event.pointerId);
 
             if (this.isLongPress) {
                 if (this.activePointers.size === 0) this.isLongPress = false;
@@ -75,24 +84,29 @@ class InteractionHandler {
         });
 
         svg.on("pointercancel", (event) => {
-            this.activePointers.delete(event.pointerId);
             const timer = this.pressTimers.get(event.pointerId);
             if (timer) {
                 clearTimeout(timer);
                 this.pressTimers.delete(event.pointerId);
             }
+            this.activePointers.delete(event.pointerId);
+            if (this.activePointers.size === 0) this.isLongPress = false;
         });
     }
 
     setupOrientationEvents() {
+        const betaDisplay = document.getElementById('betaDisplay');
+        const gammaDisplay = document.getElementById('gammaDisplay');
+        const settingsModal = document.getElementById('settingsModal');
+
         window.addEventListener("deviceorientation", (event) => {
             const beta = event.beta !== null ? event.beta.valueOf() : 0;
             const gamma = event.gamma !== null ? event.gamma.valueOf() : 0;
 
-            const betaDisplay = document.getElementById('betaDisplay');
-            if (betaDisplay) betaDisplay.textContent = `Beta: ${beta.toFixed(1)}°`;
-            const gammaDisplay = document.getElementById('gammaDisplay');
-            if (gammaDisplay) gammaDisplay.textContent = `Gamma: ${gamma.toFixed(1)}°`;
+            if (settingsModal && settingsModal.classList.contains('visible')) {
+                if (betaDisplay) betaDisplay.textContent = `Beta: ${beta.toFixed(1)}°`;
+                if (gammaDisplay) gammaDisplay.textContent = `Gamma: ${gamma.toFixed(1)}°`;
+            }
 
             this.audioEngine.updateOrientation(beta, gamma);
         }, true);
