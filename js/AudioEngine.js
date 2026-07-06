@@ -12,12 +12,18 @@ class AudioEngine {
         this.panner = null; // Stereo panner
         this.waveformAnalyzer = null; // Tone.Waveform analyzer
 
+        this.synthType = 'FMSynth';
+        this.waveform = 'sine';
         this.attackTime = 0.1;
         this.releaseTime = 0.5;
         this.delayWet = 0.3;
+        this.delayTime = '8n';
+        this.reverbWet = 0.3;
+        this.reverbDecay = 2;
         this.userVolume = 0.8;
         this.maxFrequency = 880;
 
+        this.reverbNode = null;
         this.currentScaleConfig = null;
         this.generatedScaleFrequencies = [];
         this.beta = 0;
@@ -55,14 +61,14 @@ class AudioEngine {
             release: 0.25
         });
         const lowBump = new Tone.Filter(200, "lowshelf");
-        const reverb = new Tone.Reverb({ decay: 2, wet: 0.3 });
-        await reverb.ready;
+        this.reverbNode = new Tone.Reverb({ decay: this.reverbDecay, wet: this.reverbWet });
+        await this.reverbNode.ready;
 
-        this.delayNode = new Tone.FeedbackDelay("8n", 0.5);
+        this.delayNode = new Tone.FeedbackDelay(this.delayTime, 0.5);
         this.delayNode.wet.value = this.delayWet;
 
         this.panner = new Tone.Panner(0).toDestination();
-        this.masterBus.chain(lowBump, masterCompressor, reverb, this.delayNode, this.panner);
+        this.masterBus.chain(lowBump, masterCompressor, this.reverbNode, this.delayNode, this.panner);
 
         this.waveformAnalyzer = new Tone.Waveform(1024);
         this.panner.connect(this.waveformAnalyzer);
@@ -105,9 +111,9 @@ class AudioEngine {
     /**
      * Creates a new synth instance.
      */
-    createSynth() {
-        const selectedWaveform = document.getElementById('waveformSelect').value;
-        const synthType = document.getElementById('synthTypeSelect').value;
+    createSynth(waveform = null) {
+        const selectedWaveform = waveform || this.waveform;
+        const synthType = this.synthType;
 
         const settings = {
             oscillator: { type: selectedWaveform },
@@ -124,6 +130,9 @@ class AudioEngine {
                 break;
             case 'DuoSynth':
                 synth = new Tone.DuoSynth(settings);
+                // DuoSynth has two oscillators
+                synth.voice0.oscillator.type = selectedWaveform;
+                synth.voice1.oscillator.type = selectedWaveform;
                 break;
             case 'MonoSynth':
                 synth = new Tone.MonoSynth(settings);
@@ -317,6 +326,57 @@ class AudioEngine {
         this.delayWet = value;
         if (this.delayNode) this.delayNode.wet.rampTo(this.delayWet, 0.1);
     }
+
+    setDelayTime(value) {
+        this.delayTime = value;
+        if (this.delayNode) this.delayNode.delayTime.rampTo(this.delayTime, 0.1);
+    }
+
+    setReverbWet(value) {
+        this.reverbWet = value;
+        if (this.reverbNode) this.reverbNode.wet.rampTo(this.reverbWet, 0.1);
+    }
+
+    setReverbDecay(value) {
+        this.reverbDecay = value;
+        if (this.reverbNode) this.reverbNode.decay = this.reverbDecay;
+    }
+
+    updateWaveform(value) {
+        this.waveform = value;
+        if (this.instrument) {
+            if (this.instrument.oscillator) {
+                this.instrument.oscillator.type = this.waveform;
+            } else if (this.instrument.voice0) {
+                this.instrument.voice0.oscillator.type = this.waveform;
+                this.instrument.voice1.oscillator.type = this.waveform;
+            }
+        }
+        if (this.previewLoop && this.previewLoop.synth) {
+            if (this.previewLoop.synth.oscillator) {
+                this.previewLoop.synth.oscillator.type = this.waveform;
+            } else if (this.previewLoop.synth.voice0) {
+                this.previewLoop.synth.voice0.oscillator.type = this.waveform;
+                this.previewLoop.synth.voice1.oscillator.type = this.waveform;
+            }
+        }
+        this.savedLoops.forEach(loop => {
+            if (loop.synth) {
+                if (loop.synth.oscillator) {
+                    loop.synth.oscillator.type = this.waveform;
+                } else if (loop.synth.voice0) {
+                    loop.synth.voice0.oscillator.type = this.waveform;
+                    loop.synth.voice1.oscillator.type = this.waveform;
+                }
+            }
+        });
+    }
+
+    updateSynthType(value) {
+        this.synthType = value;
+        this.clearSounds();
+    }
+
     setUserVolume(value) {
         this.userVolume = value;
         this.updateMasterVolume();
