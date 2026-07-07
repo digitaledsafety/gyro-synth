@@ -28,8 +28,15 @@ class InteractionHandler {
         const svg = this.visualizer.waveformSvg;
 
         svg.on("pointerdown", (event) => {
+            // Clear any existing press timers to prevent multiple simultaneous long-press actions
+            this.pressTimers.forEach(timer => clearTimeout(timer));
+            this.pressTimers.clear();
+
+            if (this.activePointers.size === 0) {
+                this.isLongPress = false;
+            }
             this.activePointers.add(event.pointerId);
-            this.isLongPress = false;
+
             this.visualizer.createRipple(event.clientX, event.clientY);
 
             const timer = setTimeout(() => {
@@ -45,12 +52,14 @@ class InteractionHandler {
         });
 
         svg.on("pointerup", (event) => {
-            this.activePointers.delete(event.pointerId);
             const timer = this.pressTimers.get(event.pointerId);
             if (timer) {
                 clearTimeout(timer);
                 this.pressTimers.delete(event.pointerId);
             }
+
+            // Delete the pointer from activePointers BEFORE checking its size
+            this.activePointers.delete(event.pointerId);
 
             if (this.isLongPress) {
                 if (this.activePointers.size === 0) this.isLongPress = false;
@@ -89,10 +98,14 @@ class InteractionHandler {
             const beta = event.beta !== null ? event.beta.valueOf() : 0;
             const gamma = event.gamma !== null ? event.gamma.valueOf() : 0;
 
-            const betaDisplay = document.getElementById('betaDisplay');
-            if (betaDisplay) betaDisplay.textContent = `Beta: ${beta.toFixed(1)}°`;
-            const gammaDisplay = document.getElementById('gammaDisplay');
-            if (gammaDisplay) gammaDisplay.textContent = `Gamma: ${gamma.toFixed(1)}°`;
+            // Only update the UI displays if the settings modal is visible to save resources
+            const modal = document.getElementById('settingsModal');
+            if (modal && modal.classList.contains('visible')) {
+                const betaDisplay = document.getElementById('betaDisplay');
+                if (betaDisplay) betaDisplay.textContent = `Beta: ${beta.toFixed(1)}°`;
+                const gammaDisplay = document.getElementById('gammaDisplay');
+                if (gammaDisplay) gammaDisplay.textContent = `Gamma: ${gamma.toFixed(1)}°`;
+            }
 
             this.audioEngine.updateOrientation(beta, gamma);
         }, true);
@@ -143,6 +156,7 @@ class InteractionHandler {
         const attackSlider = document.getElementById('attackSlider');
         const releaseSlider = document.getElementById('releaseSlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
+        const visModeSelect = document.getElementById('visModeSelect');
 
         const updateScaleSettings = () => {
             this.audioEngine.updateScale(scaleSelect.value, rootNoteSelect.value);
@@ -157,6 +171,7 @@ class InteractionHandler {
         attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
         releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
         delayWetSlider.addEventListener('input', (e) => this.audioEngine.setDelayWet(parseFloat(e.target.value)));
+        visModeSelect.addEventListener('change', (e) => this.audioEngine.setVisMode(e.target.value));
     }
 
     showSettings() {

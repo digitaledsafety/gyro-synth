@@ -11,6 +11,8 @@ class AudioEngine {
         this.delayNode = null; // Feedback delay effect
         this.panner = null; // Stereo panner
         this.waveformAnalyzer = null; // Tone.Waveform analyzer
+        this.fftAnalyzer = null; // Tone.FFT analyzer
+        this.visMode = 'waveform'; // 'waveform' or 'spectrum'
 
         this.attackTime = 0.1;
         this.releaseTime = 0.5;
@@ -65,7 +67,9 @@ class AudioEngine {
         this.masterBus.chain(lowBump, masterCompressor, reverb, this.delayNode, this.panner);
 
         this.waveformAnalyzer = new Tone.Waveform(1024);
+        this.fftAnalyzer = new Tone.FFT(1024);
         this.panner.connect(this.waveformAnalyzer);
+        this.panner.connect(this.fftAnalyzer);
 
         this.updateMasterVolume();
     }
@@ -320,5 +324,9 @@ class AudioEngine {
     setUserVolume(value) {
         this.userVolume = value;
         this.updateMasterVolume();
+    }
+
+    setVisMode(mode) {
+        this.visMode = mode;
     }
 }
