@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gyro Synth</title>
     <link rel="manifest" href="manifest.json">
-    <script src="https://unpkg.com/tone"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/tone@14.8.49"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <style>
       /* Custom styles to ensure full height and centering */
       html, body {
@@ -140,6 +140,7 @@
       <h1 class="text-4xl font-bold mb-4">Gyro Synth</h1>
       <p class="mb-8 text-lg opacity-80">Tilt your device to explore soundscapes.</p>
       <button id="startButton">Tap to Start</button>
+      <p class="mt-4 text-sm opacity-70">Use a 2-finger long press or press 'm' to open settings.</p>
       <p class="mt-8 text-xs opacity-50">Requires audio and motion sensor permissions.</p>
     </div>
 
@@ -214,6 +215,14 @@
             <label for="delayWetSlider" class="modal-label">Delay Wet</label>
             <input type="range" id="delayWetSlider" min="0" max="1" step="0.01" value="0.3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
           </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="visModeSelect" class="modal-label">Visualization Mode</label>
+          <select id="visModeSelect" title="Select Visualization Mode" aria-label="Select Visualization Mode">
+            <option value="waveform">Waveform</option>
+            <option value="spectrum">Frequency Spectrum</option>
+          </select>
         </div>
 
         <div class="mb-6">
