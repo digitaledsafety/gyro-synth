@@ -7,12 +7,17 @@ class Visualizer {
         this.audioEngine = audioEngine;
         this.waveformSvg = d3.select("#waveformSvg");
         this.barCount = 64;
+        this.mode = 'waveform'; // 'waveform' or 'spectrum'
         this.colorScale = d3.scaleLinear()
             .domain([0, 0.5, 1])
             .range(["#3498db", "#f1c40f", "#e74c3c"]);
 
         this.xScale = d3.scaleLinear().domain([0, this.barCount - 1]);
         this.yScale = d3.scaleLinear().domain([0, 1]);
+
+        this.svgWidth = 0;
+        this.svgHeight = 0;
+        this.barWidth = 0;
 
         this.init();
     }
@@ -25,15 +30,17 @@ class Visualizer {
 
     resize() {
         if (this.waveformSvg) {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
+            const node = this.waveformSvg.node();
+            this.svgWidth = node.clientWidth || window.innerWidth;
+            this.svgHeight = node.clientHeight || window.innerHeight;
 
-            this.waveformSvg.attr("viewBox", `0 0 ${width} ${height}`)
-                .attr("width", width)
-                .attr("height", height);
+            this.waveformSvg.attr("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`)
+                .attr("width", this.svgWidth)
+                .attr("height", this.svgHeight);
 
-            this.xScale.range([0, width]);
-            this.yScale.range([height, 0]);
+            this.xScale.range([0, this.svgWidth]);
+            this.yScale.range([this.svgHeight, 0]);
+            this.barWidth = this.svgWidth / this.barCount;
         }
     }
 
@@ -61,25 +68,39 @@ class Visualizer {
             .remove();
     }
 
+    setMode(mode) {
+        this.mode = mode;
+    }
+
     update() {
         if (!this.audioEngine.waveformAnalyzer || !this.waveformSvg) {
             requestAnimationFrame(() => this.update());
             return;
         }
 
-        const waveformArray = this.audioEngine.waveformAnalyzer.getValue();
-        const svgWidth = this.waveformSvg.node().clientWidth;
-        const svgHeight = this.waveformSvg.node().clientHeight;
-        const minBarHeight = svgHeight * 0.01;
-        const samplesPerBar = Math.floor(waveformArray.length / this.barCount);
-        const barWidth = svgWidth / this.barCount;
+        let dataArray;
+        let visualGain = 2.0;
+
+        if (this.mode === 'spectrum' && this.audioEngine.fftAnalyzer) {
+            dataArray = this.audioEngine.fftAnalyzer.getValue();
+            visualGain = 1.0; // FFT is already in dB-like scale or normalized
+        } else {
+            dataArray = this.audioEngine.waveformAnalyzer.getValue();
+        }
+
+        const minBarHeight = this.svgHeight * 0.01;
+        const samplesPerBar = Math.floor(dataArray.length / this.barCount);
 
         const barData = [];
-        const visualGain = 2.0;
         for (let i = 0; i < this.barCount; i++) {
             let sum = 0;
             for (let j = 0; j < samplesPerBar; j++) {
-                sum += Math.min(1.0, Math.abs(waveformArray[i * samplesPerBar + j]) * visualGain);
+                let val = dataArray[i * samplesPerBar + j];
+                if (this.mode === 'spectrum') {
+                    // Convert dB to normalized 0-1 for visualization
+                    val = (val + 100) / 100;
+                }
+                sum += Math.min(1.0, Math.max(0, Math.abs(val) * visualGain));
             }
             barData.push(sum / samplesPerBar);
         }
@@ -88,12 +109,12 @@ class Visualizer {
 
         bars.enter().append("rect")
             .attr("class", "bar")
-            .attr("x", (d, i) => i * barWidth)
-            .attr("width", barWidth * 0.8)
+            .attr("x", (d, i) => i * this.barWidth)
+            .attr("width", this.barWidth * 0.8)
             .merge(bars)
-            .attr("x", (d, i) => i * barWidth + (barWidth * 0.1))
-            .attr("y", d => svgHeight - Math.max(minBarHeight, d * svgHeight))
-            .attr("height", d => Math.max(minBarHeight, d * svgHeight))
+            .attr("x", (d, i) => i * this.barWidth + (this.barWidth * 0.1))
+            .attr("y", d => this.svgHeight - Math.max(minBarHeight, d * this.svgHeight))
+            .attr("height", d => Math.max(minBarHeight, d * this.svgHeight))
             .attr("fill", d => this.colorScale(d));
 
         bars.exit().remove();
