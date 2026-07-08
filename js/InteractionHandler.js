@@ -29,7 +29,15 @@ class InteractionHandler {
 
         svg.on("pointerdown", (event) => {
             this.activePointers.add(event.pointerId);
-            this.isLongPress = false;
+
+            // Clear all existing timers to prevent race conditions or multiple triggers
+            this.pressTimers.forEach(timer => clearTimeout(timer));
+            this.pressTimers.clear();
+
+            if (this.activePointers.size === 1) {
+                this.isLongPress = false;
+            }
+
             this.visualizer.createRipple(event.clientX, event.clientY);
 
             const timer = setTimeout(() => {
@@ -85,14 +93,17 @@ class InteractionHandler {
     }
 
     setupOrientationEvents() {
+        const settingsModal = document.getElementById('settingsModal');
         window.addEventListener("deviceorientation", (event) => {
             const beta = event.beta !== null ? event.beta.valueOf() : 0;
             const gamma = event.gamma !== null ? event.gamma.valueOf() : 0;
 
-            const betaDisplay = document.getElementById('betaDisplay');
-            if (betaDisplay) betaDisplay.textContent = `Beta: ${beta.toFixed(1)}°`;
-            const gammaDisplay = document.getElementById('gammaDisplay');
-            if (gammaDisplay) gammaDisplay.textContent = `Gamma: ${gamma.toFixed(1)}°`;
+            if (settingsModal && settingsModal.classList.contains('visible')) {
+                const betaDisplay = document.getElementById('betaDisplay');
+                if (betaDisplay) betaDisplay.textContent = `Beta: ${beta.toFixed(1)}°`;
+                const gammaDisplay = document.getElementById('gammaDisplay');
+                if (gammaDisplay) gammaDisplay.textContent = `Gamma: ${gamma.toFixed(1)}°`;
+            }
 
             this.audioEngine.updateOrientation(beta, gamma);
         }, true);
@@ -140,6 +151,7 @@ class InteractionHandler {
         const synthTypeSelect = document.getElementById('synthTypeSelect');
         const waveformSelect = document.getElementById('waveformSelect');
         const volumeSlider = document.getElementById('volumeSlider');
+        const visModeSelect = document.getElementById('visModeSelect');
         const attackSlider = document.getElementById('attackSlider');
         const releaseSlider = document.getElementById('releaseSlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
@@ -154,6 +166,7 @@ class InteractionHandler {
         synthTypeSelect.addEventListener('change', () => this.audioEngine.clearSounds());
         waveformSelect.addEventListener('change', () => this.audioEngine.clearSounds());
         volumeSlider.addEventListener('input', (e) => this.audioEngine.setUserVolume(parseFloat(e.target.value)));
+        visModeSelect.addEventListener('change', (e) => this.visualizer.setMode(e.target.value));
         attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
         releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
         delayWetSlider.addEventListener('input', (e) => this.audioEngine.setDelayWet(parseFloat(e.target.value)));
