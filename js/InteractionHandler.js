@@ -29,7 +29,9 @@ class InteractionHandler {
 
         svg.on("pointerdown", (event) => {
             this.activePointers.add(event.pointerId);
-            this.isLongPress = false;
+            if (this.activePointers.size === 1) {
+                this.isLongPress = false;
+            }
             this.visualizer.createRipple(event.clientX, event.clientY);
 
             const timer = setTimeout(() => {
@@ -89,10 +91,15 @@ class InteractionHandler {
             const beta = event.beta !== null ? event.beta.valueOf() : 0;
             const gamma = event.gamma !== null ? event.gamma.valueOf() : 0;
 
-            const betaDisplay = document.getElementById('betaDisplay');
-            if (betaDisplay) betaDisplay.textContent = `Beta: ${beta.toFixed(1)}°`;
-            const gammaDisplay = document.getElementById('gammaDisplay');
-            if (gammaDisplay) gammaDisplay.textContent = `Gamma: ${gamma.toFixed(1)}°`;
+            const modal = document.getElementById('settingsModal');
+            const isVisible = modal && modal.classList.contains('visible');
+
+            if (isVisible) {
+                const betaDisplay = document.getElementById('betaDisplay');
+                if (betaDisplay) betaDisplay.textContent = `Beta: ${beta.toFixed(1)}°`;
+                const gammaDisplay = document.getElementById('gammaDisplay');
+                if (gammaDisplay) gammaDisplay.textContent = `Gamma: ${gamma.toFixed(1)}°`;
+            }
 
             this.audioEngine.updateOrientation(beta, gamma);
         }, true);
@@ -143,6 +150,7 @@ class InteractionHandler {
         const attackSlider = document.getElementById('attackSlider');
         const releaseSlider = document.getElementById('releaseSlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
+        const visModeSelect = document.getElementById('visModeSelect');
 
         const updateScaleSettings = () => {
             this.audioEngine.updateScale(scaleSelect.value, rootNoteSelect.value);
@@ -157,6 +165,7 @@ class InteractionHandler {
         attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
         releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
         delayWetSlider.addEventListener('input', (e) => this.audioEngine.setDelayWet(parseFloat(e.target.value)));
+        visModeSelect.addEventListener('change', (e) => this.visualizer.setVisMode(e.target.value));
     }
 
     showSettings() {
