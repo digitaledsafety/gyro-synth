@@ -14,8 +14,13 @@ class AudioEngine {
         this.fftAnalyzer = null; // Tone.FFT analyzer
 
         this.attackTime = 0.1;
+        this.decayTime = 0.2;
+        this.sustainLevel = 0.5;
         this.releaseTime = 0.5;
         this.delayWet = 0.3;
+        this.delayFeedback = 0.5;
+        this.reverbWet = 0.3;
+        this.reverbDecay = 2;
         this.userVolume = 0.8;
         this.maxFrequency = 880;
 
@@ -56,14 +61,14 @@ class AudioEngine {
             release: 0.25
         });
         const lowBump = new Tone.Filter(200, "lowshelf");
-        const reverb = new Tone.Reverb({ decay: 2, wet: 0.3 });
-        await reverb.ready;
+        this.reverb = new Tone.Reverb({ decay: this.reverbDecay, wet: this.reverbWet });
+        await this.reverb.ready;
 
-        this.delayNode = new Tone.FeedbackDelay("8n", 0.5);
+        this.delayNode = new Tone.FeedbackDelay("8n", this.delayFeedback);
         this.delayNode.wet.value = this.delayWet;
 
         this.panner = new Tone.Panner(0).toDestination();
-        this.masterBus.chain(lowBump, masterCompressor, this.delayNode, reverb, this.panner);
+        this.masterBus.chain(lowBump, masterCompressor, this.delayNode, this.reverb, this.panner);
 
         this.waveformAnalyzer = new Tone.Waveform(1024);
         this.fftAnalyzer = new Tone.FFT(1024);
@@ -116,6 +121,8 @@ class AudioEngine {
             oscillator: { type: selectedWaveform },
             envelope: {
                 attack: this.attackTime,
+                decay: this.decayTime,
+                sustain: this.sustainLevel,
                 release: this.releaseTime
             }
         };
@@ -315,10 +322,24 @@ class AudioEngine {
     }
 
     setAttack(value) { this.attackTime = value; }
+    setDecay(value) { this.decayTime = value; }
+    setSustain(value) { this.sustainLevel = value; }
     setRelease(value) { this.releaseTime = value; }
     setDelayWet(value) {
         this.delayWet = value;
         if (this.delayNode) this.delayNode.wet.rampTo(this.delayWet, 0.1);
+    }
+    setDelayFeedback(value) {
+        this.delayFeedback = value;
+        if (this.delayNode) this.delayNode.feedback.rampTo(this.delayFeedback, 0.1);
+    }
+    setReverbWet(value) {
+        this.reverbWet = value;
+        if (this.reverb) this.reverb.wet.rampTo(this.reverbWet, 0.1);
+    }
+    setReverbDecay(value) {
+        this.reverbDecay = value;
+        if (this.reverb) this.reverb.decay = this.reverbDecay;
     }
     setUserVolume(value) {
         this.userVolume = value;
