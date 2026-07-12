@@ -9,13 +9,21 @@ class AudioEngine {
         this.savedLoops = []; // Array to store multiple Tone.Loop instances
         this.masterBus = null; // Central gain node
         this.delayNode = null; // Feedback delay effect
+        this.reverbNode = null; // Reverb effect
         this.panner = null; // Stereo panner
         this.waveformAnalyzer = null; // Tone.Waveform analyzer
         this.fftAnalyzer = null; // Tone.FFT analyzer
 
+        this.synthType = 'FMSynth';
+        this.waveform = 'sine';
         this.attackTime = 0.1;
         this.releaseTime = 0.5;
+
         this.delayWet = 0.3;
+        this.delayTime = '8n';
+        this.reverbWet = 0.3;
+        this.reverbDecay = 2;
+
         this.userVolume = 0.8;
         this.maxFrequency = 880;
 
@@ -56,14 +64,14 @@ class AudioEngine {
             release: 0.25
         });
         const lowBump = new Tone.Filter(200, "lowshelf");
-        const reverb = new Tone.Reverb({ decay: 2, wet: 0.3 });
-        await reverb.ready;
+        this.reverbNode = new Tone.Reverb({ decay: this.reverbDecay, wet: this.reverbWet });
+        await this.reverbNode.ready;
 
-        this.delayNode = new Tone.FeedbackDelay("8n", 0.5);
+        this.delayNode = new Tone.FeedbackDelay(this.delayTime, 0.5);
         this.delayNode.wet.value = this.delayWet;
 
         this.panner = new Tone.Panner(0).toDestination();
-        this.masterBus.chain(lowBump, masterCompressor, this.delayNode, reverb, this.panner);
+        this.masterBus.chain(lowBump, masterCompressor, this.delayNode, this.reverbNode, this.panner);
 
         this.waveformAnalyzer = new Tone.Waveform(1024);
         this.fftAnalyzer = new Tone.FFT(1024);
@@ -107,10 +115,11 @@ class AudioEngine {
 
     /**
      * Creates a new synth instance.
+     * @param {string} [waveform] - Optional waveform override
      */
-    createSynth() {
-        const selectedWaveform = document.getElementById('waveformSelect').value;
-        const synthType = document.getElementById('synthTypeSelect').value;
+    createSynth(waveform) {
+        const selectedWaveform = waveform || this.waveform;
+        const synthType = this.synthType;
 
         const settings = {
             oscillator: { type: selectedWaveform },
@@ -126,7 +135,10 @@ class AudioEngine {
                 synth = new Tone.AMSynth(settings);
                 break;
             case 'DuoSynth':
+                // DuoSynth has two oscillators
                 synth = new Tone.DuoSynth(settings);
+                synth.voice0.oscillator.type = selectedWaveform;
+                synth.voice1.oscillator.type = selectedWaveform;
                 break;
             case 'MonoSynth':
                 synth = new Tone.MonoSynth(settings);
@@ -316,12 +328,56 @@ class AudioEngine {
 
     setAttack(value) { this.attackTime = value; }
     setRelease(value) { this.releaseTime = value; }
+
     setDelayWet(value) {
         this.delayWet = value;
         if (this.delayNode) this.delayNode.wet.rampTo(this.delayWet, 0.1);
     }
+
+    setDelayTime(value) {
+        this.delayTime = value;
+        if (this.delayNode) {
+            this.delayNode.delayTime.rampTo(value, 0.1);
+        }
+    }
+
+    setReverbWet(value) {
+        this.reverbWet = value;
+        if (this.reverbNode) this.reverbNode.wet.rampTo(this.reverbWet, 0.1);
+    }
+
+    setReverbDecay(value) {
+        this.reverbDecay = value;
+        if (this.reverbNode) {
+            this.reverbNode.decay = value;
+        }
+    }
+
     setUserVolume(value) {
         this.userVolume = value;
         this.updateMasterVolume();
+    }
+
+    updateWaveform(value) {
+        this.waveform = value;
+        const updateOsc = (synth) => {
+            if (synth.oscillator) {
+                synth.oscillator.type = value;
+            } else if (synth.voice0) { // DuoSynth
+                synth.voice0.oscillator.type = value;
+                synth.voice1.oscillator.type = value;
+            }
+        };
+
+        if (this.instrument) updateOsc(this.instrument);
+        if (this.previewLoop && this.previewLoop.synth) updateOsc(this.previewLoop.synth);
+        this.savedLoops.forEach(l => {
+            if (l.synth) updateOsc(l.synth);
+        });
+    }
+
+    updateSynthType(value) {
+        this.synthType = value;
+        this.clearSounds();
     }
 }

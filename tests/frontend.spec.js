@@ -38,6 +38,12 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#scaleSelect')).toBeVisible();
     await expect(page.locator('#waveformSelect')).toBeVisible();
     await expect(page.locator('#volumeSlider')).toBeVisible();
+    await expect(page.locator('#attackSlider')).toBeVisible();
+    await expect(page.locator('#releaseSlider')).toBeVisible();
+    await expect(page.locator('#reverbWetSlider')).toBeVisible();
+    await expect(page.locator('#reverbDecaySlider')).toBeVisible();
+    await expect(page.locator('#delayWetSlider')).toBeVisible();
+    await expect(page.locator('#delayTimeSelect')).toBeVisible();
     await expect(page.locator('#clearAllBtn')).toBeVisible();
   });
 

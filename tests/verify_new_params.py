@@ -17,6 +17,9 @@ def test_new_params_and_ui():
         'id="attackSlider"',
         'id="releaseSlider"',
         'id="delayWetSlider"',
+        'id="delayTimeSelect"',
+        'id="reverbWetSlider"',
+        'id="reverbDecaySlider"',
         'id="synthTypeSelect"'
     ]
     for element in new_ui_elements:
@@ -28,14 +31,17 @@ def test_new_params_and_ui():
     listeners = [
         'attackSlider.addEventListener',
         'releaseSlider.addEventListener',
-        'delayWetSlider.addEventListener'
+        'delayWetSlider.addEventListener',
+        'delayTimeSelect.addEventListener',
+        'reverbWetSlider.addEventListener',
+        'reverbDecaySlider.addEventListener'
     ]
     for listener in listeners:
         if listener not in js_content:
             print(f"Missing event listener: {listener}")
             return False
 
-    # Check for Ripple call in pointerdown (it's now in InteractionHandler.js calling visualizer.createRipple)
+    # Check for Ripple call in pointerdown
     if 'this.visualizer.createRipple(event.clientX, event.clientY)' not in js_content:
         print("Missing createRipple call in pointerdown")
         return False
