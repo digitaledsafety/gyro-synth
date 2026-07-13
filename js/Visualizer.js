@@ -28,8 +28,9 @@ class Visualizer {
 
     resize() {
         if (this.waveformSvg) {
-            this.svgWidth = window.innerWidth;
-            this.svgHeight = window.innerHeight;
+            const node = this.waveformSvg.node();
+            this.svgWidth = node.clientWidth || window.innerWidth;
+            this.svgHeight = node.clientHeight || window.innerHeight;
 
             this.waveformSvg.attr("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`)
                 .attr("width", this.svgWidth)
@@ -37,6 +38,7 @@ class Visualizer {
 
             this.xScale.range([0, this.svgWidth]);
             this.yScale.range([this.svgHeight, 0]);
+            this.cachedBarWidth = this.svgWidth / this.barCount;
         }
     }
 
@@ -86,7 +88,7 @@ class Visualizer {
 
         const minBarHeight = this.svgHeight * 0.01;
         const samplesPerBar = Math.floor(dataArray.length / this.barCount);
-        const barWidth = this.svgWidth / this.barCount;
+        const barWidth = this.cachedBarWidth || (this.svgWidth / this.barCount);
 
         const barData = [];
         for (let i = 0; i < this.barCount; i++) {
