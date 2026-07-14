@@ -57,7 +57,7 @@ def test_extended_js_logic():
         return False
 
     # Check for Panner
-    if 'new Tone.Panner' not in content:
+    if 'new Tone.Panner' not in content and 'new Tone.StereoPanner' not in content:
         print("Missing Tone.Panner initialization")
         return False
 

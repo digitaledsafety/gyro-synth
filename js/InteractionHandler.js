@@ -149,7 +149,10 @@ class InteractionHandler {
         const volumeSlider = document.getElementById('volumeSlider');
         const attackSlider = document.getElementById('attackSlider');
         const releaseSlider = document.getElementById('releaseSlider');
+        const reverbWetSlider = document.getElementById('reverbWetSlider');
+        const reverbDecaySlider = document.getElementById('reverbDecaySlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
+        const delayTimeSelect = document.getElementById('delayTimeSelect');
         const visModeSelect = document.getElementById('visModeSelect');
 
         const updateScaleSettings = () => {
@@ -159,12 +162,18 @@ class InteractionHandler {
 
         scaleSelect.addEventListener('change', updateScaleSettings);
         rootNoteSelect.addEventListener('change', updateScaleSettings);
-        synthTypeSelect.addEventListener('change', () => this.audioEngine.clearSounds());
-        waveformSelect.addEventListener('change', () => this.audioEngine.clearSounds());
+        synthTypeSelect.addEventListener('change', (e) => this.audioEngine.updateSynthType(e.target.value));
+        waveformSelect.addEventListener('change', (e) => this.audioEngine.updateWaveform(e.target.value));
         volumeSlider.addEventListener('input', (e) => this.audioEngine.setUserVolume(parseFloat(e.target.value)));
         attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
         releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
+
+        reverbWetSlider.addEventListener('input', (e) => this.audioEngine.setReverbWet(parseFloat(e.target.value)));
+        reverbDecaySlider.addEventListener('change', (e) => this.audioEngine.setReverbDecay(parseFloat(e.target.value)));
+
         delayWetSlider.addEventListener('input', (e) => this.audioEngine.setDelayWet(parseFloat(e.target.value)));
+        delayTimeSelect.addEventListener('change', (e) => this.audioEngine.setDelayTime(e.target.value));
+
         visModeSelect.addEventListener('change', (e) => this.visualizer.setVisMode(e.target.value));
     }
 
