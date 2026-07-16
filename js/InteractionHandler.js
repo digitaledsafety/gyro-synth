@@ -148,8 +148,13 @@ class InteractionHandler {
         const waveformSelect = document.getElementById('waveformSelect');
         const volumeSlider = document.getElementById('volumeSlider');
         const attackSlider = document.getElementById('attackSlider');
+        const decaySlider = document.getElementById('decaySlider');
+        const sustainSlider = document.getElementById('sustainSlider');
         const releaseSlider = document.getElementById('releaseSlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
+        const delayFeedbackSlider = document.getElementById('delayFeedbackSlider');
+        const reverbWetSlider = document.getElementById('reverbWetSlider');
+        const reverbDecaySlider = document.getElementById('reverbDecaySlider');
         const visModeSelect = document.getElementById('visModeSelect');
 
         const updateScaleSettings = () => {
@@ -163,8 +168,13 @@ class InteractionHandler {
         waveformSelect.addEventListener('change', () => this.audioEngine.clearSounds());
         volumeSlider.addEventListener('input', (e) => this.audioEngine.setUserVolume(parseFloat(e.target.value)));
         attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
+        decaySlider.addEventListener('input', (e) => this.audioEngine.setDecay(parseFloat(e.target.value)));
+        sustainSlider.addEventListener('input', (e) => this.audioEngine.setSustain(parseFloat(e.target.value)));
         releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
         delayWetSlider.addEventListener('input', (e) => this.audioEngine.setDelayWet(parseFloat(e.target.value)));
+        delayFeedbackSlider.addEventListener('input', (e) => this.audioEngine.setDelayFeedback(parseFloat(e.target.value)));
+        reverbWetSlider.addEventListener('input', (e) => this.audioEngine.setReverbWet(parseFloat(e.target.value)));
+        reverbDecaySlider.addEventListener('input', (e) => this.audioEngine.setReverbDecay(parseFloat(e.target.value)));
         visModeSelect.addEventListener('change', (e) => this.visualizer.setVisMode(e.target.value));
     }
 
