@@ -19,6 +19,10 @@ class AudioEngine {
         this.userVolume = 0.8;
         this.maxFrequency = 880;
 
+        this.reverbWet = 0.3;
+        this.reverbDecay = 2.0;
+        this.delayTime = "8n";
+
         this.currentScaleConfig = null;
         this.generatedScaleFrequencies = [];
         this.beta = 0;
@@ -56,14 +60,15 @@ class AudioEngine {
             release: 0.25
         });
         const lowBump = new Tone.Filter(200, "lowshelf");
-        const reverb = new Tone.Reverb({ decay: 2, wet: 0.3 });
+        const reverb = new Tone.Reverb({ decay: this.reverbDecay, wet: this.reverbWet });
         await reverb.ready;
+        this.reverbNode = reverb;
 
-        this.delayNode = new Tone.FeedbackDelay("8n", 0.5);
+        this.delayNode = new Tone.FeedbackDelay(this.delayTime, 0.5);
         this.delayNode.wet.value = this.delayWet;
 
         this.panner = new Tone.Panner(0).toDestination();
-        this.masterBus.chain(lowBump, masterCompressor, this.delayNode, reverb, this.panner);
+        this.masterBus.chain(lowBump, masterCompressor, this.delayNode, this.reverbNode, this.panner);
 
         this.waveformAnalyzer = new Tone.Waveform(1024);
         this.fftAnalyzer = new Tone.FFT(1024);
@@ -320,8 +325,45 @@ class AudioEngine {
         this.delayWet = value;
         if (this.delayNode) this.delayNode.wet.rampTo(this.delayWet, 0.1);
     }
+    setReverbWet(value) {
+        this.reverbWet = value;
+        if (this.reverbNode) this.reverbNode.wet.rampTo(this.reverbWet, 0.1);
+    }
+    async setReverbDecay(value) {
+        this.reverbDecay = value;
+        if (this.reverbNode) {
+            this.reverbNode.decay = this.reverbDecay;
+            await this.reverbNode.generate();
+        }
+    }
+    setDelayTime(value) {
+        this.delayTime = value;
+        if (this.delayNode) {
+            this.delayNode.delayTime.setValueAtTime(this.delayTime);
+        }
+    }
     setUserVolume(value) {
         this.userVolume = value;
         this.updateMasterVolume();
+    }
+
+    setSynthWaveform(synth, waveform) {
+        if (!synth) return;
+        if (synth.oscillator) {
+            synth.oscillator.type = waveform;
+        } else if (synth.voice0 && synth.voice1) {
+            if (synth.voice0.oscillator) synth.voice0.oscillator.type = waveform;
+            if (synth.voice1.oscillator) synth.voice1.oscillator.type = waveform;
+        }
+    }
+
+    updateWaveform(waveform) {
+        this.setSynthWaveform(this.instrument, waveform);
+        if (this.previewLoop && this.previewLoop.synth) {
+            this.setSynthWaveform(this.previewLoop.synth, waveform);
+        }
+        this.savedLoops.forEach(loop => {
+            this.setSynthWaveform(loop.synth, waveform);
+        });
     }
 }
