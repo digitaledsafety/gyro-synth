@@ -1,11 +1,11 @@
-const CACHE_NAME = 'gyro-synth-cache-v2';
+const CACHE_NAME = 'gyro-synth-cache-v3';
 const urlsToCache = [
   'index.html',
   'js/main.js',
   'js/AudioEngine.js',
   'js/InteractionHandler.js',
   'js/Visualizer.js',
-  'https://unpkg.com/tone',
+  'https://unpkg.com/tone@14.8.49',
   'https://cdn.tailwindcss.com',
   'https://d3js.org/d3.v7.min.js',
   'manifest.json',

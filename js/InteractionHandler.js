@@ -18,10 +18,28 @@ class InteractionHandler {
     }
 
     init() {
+        this.populateScales();
         this.setupPointerEvents();
         this.setupOrientationEvents();
         this.setupKeyboardEvents();
         this.setupUIEvents();
+    }
+
+    populateScales() {
+        const scaleSelect = document.getElementById('scaleSelect');
+        if (!scaleSelect) return;
+        scaleSelect.innerHTML = '';
+        for (const scaleName in this.audioEngine.availableScales) {
+            const option = document.createElement('option');
+            option.value = scaleName;
+            option.textContent = scaleName;
+            scaleSelect.appendChild(option);
+        }
+        scaleSelect.value = 'Off';
+        const rootNoteSelect = document.getElementById('rootNoteSelect');
+        if (rootNoteSelect) {
+            rootNoteSelect.disabled = true;
+        }
     }
 
     setupPointerEvents() {
@@ -150,6 +168,9 @@ class InteractionHandler {
         const attackSlider = document.getElementById('attackSlider');
         const releaseSlider = document.getElementById('releaseSlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
+        const delayTimeSelect = document.getElementById('delayTimeSelect');
+        const reverbWetSlider = document.getElementById('reverbWetSlider');
+        const reverbDecaySlider = document.getElementById('reverbDecaySlider');
         const visModeSelect = document.getElementById('visModeSelect');
 
         const updateScaleSettings = () => {
@@ -159,12 +180,21 @@ class InteractionHandler {
 
         scaleSelect.addEventListener('change', updateScaleSettings);
         rootNoteSelect.addEventListener('change', updateScaleSettings);
-        synthTypeSelect.addEventListener('change', () => this.audioEngine.clearSounds());
-        waveformSelect.addEventListener('change', () => this.audioEngine.clearSounds());
+        synthTypeSelect.addEventListener('change', (e) => this.audioEngine.updateSynthType(e.target.value));
+        waveformSelect.addEventListener('change', (e) => this.audioEngine.updateWaveform(e.target.value));
         volumeSlider.addEventListener('input', (e) => this.audioEngine.setUserVolume(parseFloat(e.target.value)));
         attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
         releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
         delayWetSlider.addEventListener('input', (e) => this.audioEngine.setDelayWet(parseFloat(e.target.value)));
+        if (delayTimeSelect) {
+            delayTimeSelect.addEventListener('change', (e) => this.audioEngine.setDelayTime(e.target.value));
+        }
+        if (reverbWetSlider) {
+            reverbWetSlider.addEventListener('input', (e) => this.audioEngine.setReverbWet(parseFloat(e.target.value)));
+        }
+        if (reverbDecaySlider) {
+            reverbDecaySlider.addEventListener('change', (e) => this.audioEngine.setReverbDecay(parseFloat(e.target.value)));
+        }
         visModeSelect.addEventListener('change', (e) => this.visualizer.setVisMode(e.target.value));
     }
 

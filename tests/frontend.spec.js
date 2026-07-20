@@ -39,6 +39,11 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#waveformSelect')).toBeVisible();
     await expect(page.locator('#volumeSlider')).toBeVisible();
     await expect(page.locator('#clearAllBtn')).toBeVisible();
+
+    // Check new parameters/controls
+    await expect(page.locator('#reverbWetSlider')).toBeVisible();
+    await expect(page.locator('#reverbDecaySlider')).toBeVisible();
+    await expect(page.locator('#delayTimeSelect')).toBeVisible();
   });
 
   test('should display beta and gamma values', async ({ page }) => {
