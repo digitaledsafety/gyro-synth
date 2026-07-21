@@ -13,6 +13,7 @@ class InteractionHandler {
         this.lastTapTime = 0;
         this.doubleTapThreshold = 300;
         this.activePointers = new Set();
+        this.hasRealOrientation = false;
 
         this.init();
     }
@@ -52,6 +53,11 @@ class InteractionHandler {
             }
             this.visualizer.createRipple(event.clientX, event.clientY);
 
+            // Handle virtual orientation fallback if real orientation isn't present
+            if (!this.hasRealOrientation) {
+                this.updateVirtualOrientation(event.clientX, event.clientY);
+            }
+
             const timer = setTimeout(() => {
                 if (this.isLongPress) return;
                 this.isLongPress = true;
@@ -62,6 +68,12 @@ class InteractionHandler {
                 }
             }, this.longPressDuration);
             this.pressTimers.set(event.pointerId, timer);
+        });
+
+        svg.on("pointermove", (event) => {
+            if (this.activePointers.has(event.pointerId) && !this.hasRealOrientation) {
+                this.updateVirtualOrientation(event.clientX, event.clientY);
+            }
         });
 
         svg.on("pointerup", (event) => {
@@ -104,20 +116,48 @@ class InteractionHandler {
         });
     }
 
+    updateVirtualOrientation(clientX, clientY) {
+        // Map clientX/clientY to virtual beta and gamma values
+        // beta maps Y coordinate to pitch: top is max pitch, bottom is min pitch
+        // gamma maps X coordinate to stereo panning: left is -90 (full left), right is 90 (full right)
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        // beta range from -90 to 90 (or mapped normalized)
+        // In AudioEngine: let rawFreq = ((Math.sin(this.beta * (Math.PI / 180))) * this.maxFrequency + this.maxFrequency) / 2;
+        // So we want virtualBeta mapping to follow a full sine range or direct mapping.
+        // Let's map Y to an equivalent beta. Top (Y=0) is high pitch, Bottom (Y=height) is low pitch.
+        // If we map Y/height from 0 to 1, we can compute an angle beta such that Math.sin(beta * Radian) matches 1 to -1.
+        // At Y=0 (top), we want Math.sin(...) = 1 -> beta = 90.
+        // At Y=height (bottom), we want Math.sin(...) = -1 -> beta = -90.
+        const yPct = clientY / height;
+        const virtualBeta = 90 - (yPct * 180);
+
+        // gamma range -90 to 90
+        const xPct = clientX / width;
+        const virtualGamma = -90 + (xPct * 180);
+
+        const betaDisplay = document.getElementById('betaDisplay');
+        if (betaDisplay) betaDisplay.textContent = `Beta: ${virtualBeta.toFixed(1)}° (v)`;
+        const gammaDisplay = document.getElementById('gammaDisplay');
+        if (gammaDisplay) gammaDisplay.textContent = `Gamma: ${virtualGamma.toFixed(1)}° (v)`;
+
+        this.audioEngine.updateOrientation(virtualBeta, virtualGamma);
+    }
+
     setupOrientationEvents() {
         window.addEventListener("deviceorientation", (event) => {
+            if (event.beta !== null && event.beta !== undefined && event.beta !== 0) {
+                this.hasRealOrientation = true;
+            }
+
             const beta = event.beta !== null ? event.beta.valueOf() : 0;
             const gamma = event.gamma !== null ? event.gamma.valueOf() : 0;
 
-            const modal = document.getElementById('settingsModal');
-            const isVisible = modal && modal.classList.contains('visible');
-
-            if (isVisible) {
-                const betaDisplay = document.getElementById('betaDisplay');
-                if (betaDisplay) betaDisplay.textContent = `Beta: ${beta.toFixed(1)}°`;
-                const gammaDisplay = document.getElementById('gammaDisplay');
-                if (gammaDisplay) gammaDisplay.textContent = `Gamma: ${gamma.toFixed(1)}°`;
-            }
+            const betaDisplay = document.getElementById('betaDisplay');
+            if (betaDisplay) betaDisplay.textContent = `Beta: ${beta.toFixed(1)}°`;
+            const gammaDisplay = document.getElementById('gammaDisplay');
+            if (gammaDisplay) gammaDisplay.textContent = `Gamma: ${gamma.toFixed(1)}°`;
 
             this.audioEngine.updateOrientation(beta, gamma);
         }, true);
@@ -125,6 +165,11 @@ class InteractionHandler {
 
     setupKeyboardEvents() {
         window.addEventListener("keydown", (e) => {
+            const startOverlay = document.getElementById('startOverlay');
+            // If the start overlay is still active / visible, ignore 'm' or escape keys
+            if (startOverlay && startOverlay.style.display !== 'none') {
+                return;
+            }
             if (e.key.toLowerCase() === "m") {
                 this.showSettings();
             } else if (e.key === "Escape") {
