@@ -40,7 +40,7 @@
         requestWakeLock();
         // Re-acquire wake lock when the page becomes visible again
         document.addEventListener('visibilitychange', async () => {
-          if (wakeLock !== null && document.visibilityState === 'visible') {
+          if (document.visibilityState === 'visible') {
             await requestWakeLock();
           }
         });
