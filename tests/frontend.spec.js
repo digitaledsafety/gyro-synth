@@ -58,7 +58,6 @@ test.describe('Gyro Synth Frontend Tests', () => {
 
   test('should apply virtual orientation fallback on pointerdown and pointermove on desktop', async ({ page }) => {
     await page.locator('#startButton').click();
-    await page.keyboard.press('m');
 
     // Initially betaDisplay / gammaDisplay are zero or initial values
     const visualizer = page.locator('#waveformSvg');
