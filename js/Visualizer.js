@@ -108,10 +108,9 @@ class Visualizer {
 
         bars.enter().append("rect")
             .attr("class", "bar")
-            .attr("x", (d, i) => i * barWidth)
-            .attr("width", barWidth * 0.8)
             .merge(bars)
             .attr("x", (d, i) => i * barWidth + (barWidth * 0.1))
+            .attr("width", barWidth * 0.8)
             .attr("y", d => this.svgHeight - Math.max(minBarHeight, d * this.svgHeight))
             .attr("height", d => Math.max(minBarHeight, d * this.svgHeight))
             .attr("fill", d => this.colorScale(d));
