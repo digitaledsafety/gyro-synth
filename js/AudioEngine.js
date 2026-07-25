@@ -189,6 +189,7 @@ class AudioEngine {
      */
     getNormalizedFrequency() {
         let rawFreq = ((Math.sin(this.beta * (Math.PI / 180))) * this.maxFrequency + this.maxFrequency) / 2;
+        if (rawFreq < 50) rawFreq = 50;
         if (this.currentScaleConfig && this.currentScaleConfig.intervals && this.generatedScaleFrequencies.length > 0) {
             rawFreq = this.getSnappedFrequency(rawFreq);
         }
@@ -355,8 +356,24 @@ class AudioEngine {
     async setReverbDecay(value) {
         this.reverbDecay = value;
         if (this.reverbNode) {
-            this.reverbNode.decay = value;
-            await this.reverbNode.generate();
+            if (this._generatingReverb) {
+                this._pendingReverbDecay = value;
+                return;
+            }
+            this._generatingReverb = true;
+            try {
+                this.reverbNode.decay = value;
+                await this.reverbNode.generate();
+            } catch (err) {
+                console.error("Error generating reverb:", err);
+            } finally {
+                this._generatingReverb = false;
+                if (this._pendingReverbDecay !== undefined) {
+                    const nextDecay = this._pendingReverbDecay;
+                    delete this._pendingReverbDecay;
+                    await this.setReverbDecay(nextDecay);
+                }
+            }
         }
     }
     updateWaveform(waveform) {
