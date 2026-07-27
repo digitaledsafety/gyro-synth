@@ -65,9 +65,16 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const box = await visualizer.boundingBox();
     expect(box).not.toBeNull();
 
-    // Click on the SVG to trigger virtual fallback
-    await page.mouse.move(box.x + box.width / 4, box.y + box.height / 4);
-    await page.mouse.down();
+    const x1 = box.x + box.width / 4;
+    const y1 = box.y + box.height / 4;
+
+    // Dispatch pointerdown directly to the SVG to trigger virtual fallback
+    await page.dispatchEvent('#waveformSvg', 'pointerdown', {
+      clientX: x1,
+      clientY: y1,
+      pointerId: 1,
+      bubbles: true
+    });
 
     // Check that betaDisplay/gammaDisplay reflect virtual value mapped from pointer
     const betaText = await page.locator('#betaDisplay').textContent();
@@ -75,14 +82,28 @@ test.describe('Gyro Synth Frontend Tests', () => {
     expect(betaText).toContain('(v)');
     expect(gammaText).toContain('(v)');
 
-    // Move mouse and verify update
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    const x2 = box.x + box.width / 2;
+    const y2 = box.y + box.height / 2;
+
+    // Dispatch pointermove directly to verify update
+    await page.dispatchEvent('#waveformSvg', 'pointermove', {
+      clientX: x2,
+      clientY: y2,
+      pointerId: 1,
+      bubbles: true
+    });
+
     const betaTextMove = await page.locator('#betaDisplay').textContent();
     const gammaTextMove = await page.locator('#gammaDisplay').textContent();
     expect(betaTextMove).not.toEqual(betaText);
     expect(gammaTextMove).not.toEqual(gammaText);
 
-    await page.mouse.up();
+    await page.dispatchEvent('#waveformSvg', 'pointerup', {
+      clientX: x2,
+      clientY: y2,
+      pointerId: 1,
+      bubbles: true
+    });
   });
 
   test('should verify accessibility properties on key interactive components', async ({ page }) => {
