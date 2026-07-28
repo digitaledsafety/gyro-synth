@@ -29,6 +29,7 @@ test.describe('Gyro Synth Frontend Tests', () => {
   test('should have necessary settings controls', async ({ page }) => {
     // Start app first so 'm' hotkey works
     await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
 
     // Open settings (assuming 'm' key or similar, but let's check if it exists in DOM)
     const modal = page.locator('#settingsModal');
@@ -47,10 +48,15 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#reverbWetSlider')).toBeVisible();
     await expect(page.locator('#reverbDecaySlider')).toBeVisible();
     await expect(page.locator('#delayTimeSelect')).toBeVisible();
+
+    // Check low-pass resonant filter controls
+    await expect(page.locator('#filterCutoffSlider')).toBeVisible();
+    await expect(page.locator('#filterQSlider')).toBeVisible();
   });
 
   test('should display beta and gamma values', async ({ page }) => {
     await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
     await page.keyboard.press('m');
     await expect(page.locator('#betaDisplay')).toContainText('Beta:');
     await expect(page.locator('#gammaDisplay')).toContainText('Gamma:');
@@ -58,7 +64,7 @@ test.describe('Gyro Synth Frontend Tests', () => {
 
   test('should apply virtual orientation fallback on pointerdown and pointermove on desktop', async ({ page }) => {
     await page.locator('#startButton').click();
-    await page.keyboard.press('m');
+    await expect(page.locator('#startOverlay')).toBeHidden();
 
     // Initially betaDisplay / gammaDisplay are zero or initial values
     const visualizer = page.locator('#waveformSvg');
@@ -69,18 +75,36 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await page.mouse.move(box.x + box.width / 4, box.y + box.height / 4);
     await page.mouse.down();
 
+    // Open settings to check display values
+    await page.keyboard.press('m');
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+
     // Check that betaDisplay/gammaDisplay reflect virtual value mapped from pointer
     const betaText = await page.locator('#betaDisplay').textContent();
     const gammaText = await page.locator('#gammaDisplay').textContent();
     expect(betaText).toContain('(v)');
     expect(gammaText).toContain('(v)');
 
+    // Close settings so we can move pointer over SVG unobstructed
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+
     // Move mouse and verify update
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+
+    // Open settings to check updated values
+    await page.keyboard.press('m');
+    await expect(modal).toBeVisible();
+
     const betaTextMove = await page.locator('#betaDisplay').textContent();
     const gammaTextMove = await page.locator('#gammaDisplay').textContent();
     expect(betaTextMove).not.toEqual(betaText);
     expect(gammaTextMove).not.toEqual(gammaText);
+
+    // Close settings modal to clean up
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
 
     await page.mouse.up();
   });
@@ -92,6 +116,7 @@ test.describe('Gyro Synth Frontend Tests', () => {
 
     // Click start to expose settings button
     await startButton.click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
     await page.keyboard.press('m');
 
     // Check modal close button accessibility
@@ -111,6 +136,8 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#reverbDecaySlider')).toHaveAttribute('aria-label', 'Reverb Decay Time');
     await expect(page.locator('#delayWetSlider')).toHaveAttribute('aria-label', 'Delay Wet Level');
     await expect(page.locator('#volumeSlider')).toHaveAttribute('aria-label', 'Master Volume Level');
+    await expect(page.locator('#filterCutoffSlider')).toHaveAttribute('aria-label', 'Filter Cutoff Frequency');
+    await expect(page.locator('#filterQSlider')).toHaveAttribute('aria-label', 'Filter Resonance');
   });
 
   test('should not show settings modal on keypress "m" when start overlay is active', async ({ page }) => {
