@@ -151,15 +151,18 @@ class InteractionHandler {
                 this.hasRealOrientation = true;
             }
 
-            const beta = event.beta !== null ? event.beta.valueOf() : 0;
-            const gamma = event.gamma !== null ? event.gamma.valueOf() : 0;
+            // Only override if real orientation is actually present/active
+            if (this.hasRealOrientation) {
+                const beta = event.beta !== null ? event.beta.valueOf() : 0;
+                const gamma = event.gamma !== null ? event.gamma.valueOf() : 0;
 
-            const betaDisplay = document.getElementById('betaDisplay');
-            if (betaDisplay) betaDisplay.textContent = `Beta: ${beta.toFixed(1)}°`;
-            const gammaDisplay = document.getElementById('gammaDisplay');
-            if (gammaDisplay) gammaDisplay.textContent = `Gamma: ${gamma.toFixed(1)}°`;
+                const betaDisplay = document.getElementById('betaDisplay');
+                if (betaDisplay) betaDisplay.textContent = `Beta: ${beta.toFixed(1)}°`;
+                const gammaDisplay = document.getElementById('gammaDisplay');
+                if (gammaDisplay) gammaDisplay.textContent = `Gamma: ${gamma.toFixed(1)}°`;
 
-            this.audioEngine.updateOrientation(beta, gamma);
+                this.audioEngine.updateOrientation(beta, gamma);
+            }
         }, true);
     }
 
