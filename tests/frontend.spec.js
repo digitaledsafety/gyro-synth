@@ -2,8 +2,8 @@ const { test, expect } = require('@playwright/test');
 
 test.describe('Gyro Synth Frontend Tests', () => {
   test.beforeEach(async ({ page }) => {
-    // Serve the app locally
-    await page.goto('http://localhost:8000');
+    // Serve the app locally using the configured baseURL
+    await page.goto('/');
   });
 
   test('should show start overlay on load', async ({ page }) => {
@@ -29,6 +29,7 @@ test.describe('Gyro Synth Frontend Tests', () => {
   test('should have necessary settings controls', async ({ page }) => {
     // Start app first so 'm' hotkey works
     await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
 
     // Open settings (assuming 'm' key or similar, but let's check if it exists in DOM)
     const modal = page.locator('#settingsModal');
@@ -51,6 +52,7 @@ test.describe('Gyro Synth Frontend Tests', () => {
 
   test('should display beta and gamma values', async ({ page }) => {
     await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
     await page.keyboard.press('m');
     await expect(page.locator('#betaDisplay')).toContainText('Beta:');
     await expect(page.locator('#gammaDisplay')).toContainText('Gamma:');
@@ -58,16 +60,20 @@ test.describe('Gyro Synth Frontend Tests', () => {
 
   test('should apply virtual orientation fallback on pointerdown and pointermove on desktop', async ({ page }) => {
     await page.locator('#startButton').click();
-    await page.keyboard.press('m');
+    await expect(page.locator('#startOverlay')).toBeHidden();
 
     // Initially betaDisplay / gammaDisplay are zero or initial values
     const visualizer = page.locator('#waveformSvg');
     const box = await visualizer.boundingBox();
     expect(box).not.toBeNull();
 
-    // Click on the SVG to trigger virtual fallback
+    // Click on the SVG to trigger virtual fallback while the modal is closed (so backdrop doesn't block the pointer events)
     await page.mouse.move(box.x + box.width / 4, box.y + box.height / 4);
     await page.mouse.down();
+
+    // Now open the settings modal to inspect the display values
+    await page.keyboard.press('m');
+    await expect(page.locator('#settingsModal')).toBeVisible();
 
     // Check that betaDisplay/gammaDisplay reflect virtual value mapped from pointer
     const betaText = await page.locator('#betaDisplay').textContent();
@@ -75,13 +81,23 @@ test.describe('Gyro Synth Frontend Tests', () => {
     expect(betaText).toContain('(v)');
     expect(gammaText).toContain('(v)');
 
+    // Close the settings modal to perform further pointer movement on the SVG
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#settingsModal')).toBeHidden();
+
     // Move mouse and verify update
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+
+    // Reopen the modal to check the new virtual values
+    await page.keyboard.press('m');
+    await expect(page.locator('#settingsModal')).toBeVisible();
+
     const betaTextMove = await page.locator('#betaDisplay').textContent();
     const gammaTextMove = await page.locator('#gammaDisplay').textContent();
     expect(betaTextMove).not.toEqual(betaText);
     expect(gammaTextMove).not.toEqual(gammaText);
 
+    await page.keyboard.press('Escape');
     await page.mouse.up();
   });
 
@@ -92,6 +108,7 @@ test.describe('Gyro Synth Frontend Tests', () => {
 
     // Click start to expose settings button
     await startButton.click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
     await page.keyboard.press('m');
 
     // Check modal close button accessibility
