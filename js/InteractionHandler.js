@@ -113,6 +113,9 @@ class InteractionHandler {
                 clearTimeout(timer);
                 this.pressTimers.delete(event.pointerId);
             }
+            if (this.activePointers.size === 0) {
+                this.isLongPress = false;
+            }
         });
     }
 
@@ -215,7 +218,10 @@ class InteractionHandler {
         const volumeSlider = document.getElementById('volumeSlider');
         const attackSlider = document.getElementById('attackSlider');
         const releaseSlider = document.getElementById('releaseSlider');
+        const decaySlider = document.getElementById('decaySlider');
+        const sustainSlider = document.getElementById('sustainSlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
+        const delayFeedbackSlider = document.getElementById('delayFeedbackSlider');
         const delayTimeSelect = document.getElementById('delayTimeSelect');
         const reverbWetSlider = document.getElementById('reverbWetSlider');
         const reverbDecaySlider = document.getElementById('reverbDecaySlider');
@@ -233,7 +239,16 @@ class InteractionHandler {
         volumeSlider.addEventListener('input', (e) => this.audioEngine.setUserVolume(parseFloat(e.target.value)));
         attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
         releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
+        if (decaySlider) {
+            decaySlider.addEventListener('input', (e) => this.audioEngine.setDecay(parseFloat(e.target.value)));
+        }
+        if (sustainSlider) {
+            sustainSlider.addEventListener('input', (e) => this.audioEngine.setSustain(parseFloat(e.target.value)));
+        }
         delayWetSlider.addEventListener('input', (e) => this.audioEngine.setDelayWet(parseFloat(e.target.value)));
+        if (delayFeedbackSlider) {
+            delayFeedbackSlider.addEventListener('input', (e) => this.audioEngine.setDelayFeedback(parseFloat(e.target.value)));
+        }
         if (delayTimeSelect) {
             delayTimeSelect.addEventListener('change', (e) => this.audioEngine.setDelayTime(e.target.value));
         }
