@@ -3,9 +3,11 @@
       let visualizer = null;
       let interactionHandler = null;
       let wakeLock = null; // Screen wake lock object
+      let isAppStarted = false; // Track if the application has been started
 
       // Function to request a screen wake lock
       async function requestWakeLock() {
+        if (wakeLock !== null) return;
         try {
           if ('wakeLock' in navigator) {
             wakeLock = await navigator.wakeLock.request('screen');
@@ -40,7 +42,7 @@
         requestWakeLock();
         // Re-acquire wake lock when the page becomes visible again
         document.addEventListener('visibilitychange', async () => {
-          if (wakeLock !== null && document.visibilityState === 'visible') {
+          if (isAppStarted && document.visibilityState === 'visible') {
             await requestWakeLock();
           }
         });
@@ -51,6 +53,7 @@
 
         // Additional listener for startButton to acquire wake lock
         document.getElementById('startButton').addEventListener('click', () => {
+            isAppStarted = true;
             requestWakeLock();
         });
       });

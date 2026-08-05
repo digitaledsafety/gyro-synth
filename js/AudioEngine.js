@@ -25,6 +25,8 @@ class AudioEngine {
         this.reverbDecay = 2.0;
         this.delayTime = '8n';
         this.reverbNode = null;
+        this._generatingReverb = false;
+        this._pendingReverbDecay = null;
 
         this.currentScaleConfig = null;
         this.generatedScaleFrequencies = [];
@@ -354,9 +356,28 @@ class AudioEngine {
     }
     async setReverbDecay(value) {
         this.reverbDecay = value;
-        if (this.reverbNode) {
+        if (!this.reverbNode) return;
+
+        if (this._generatingReverb) {
+            // Queue this value as the latest pending decay time
+            this._pendingReverbDecay = value;
+            return;
+        }
+
+        this._generatingReverb = true;
+        try {
             this.reverbNode.decay = value;
             await this.reverbNode.generate();
+        } catch (err) {
+            console.error('Error generating reverb:', err);
+        } finally {
+            this._generatingReverb = false;
+            // If another decay change came in while we were generating, process the latest one
+            if (this._pendingReverbDecay !== null) {
+                const nextValue = this._pendingReverbDecay;
+                this._pendingReverbDecay = null;
+                await this.setReverbDecay(nextValue);
+            }
         }
     }
     updateWaveform(waveform) {
