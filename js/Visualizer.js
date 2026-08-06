@@ -28,8 +28,9 @@ class Visualizer {
 
     resize() {
         if (this.waveformSvg) {
-            this.svgWidth = window.innerWidth;
-            this.svgHeight = window.innerHeight;
+            const node = this.waveformSvg.node();
+            this.svgWidth = (node && node.clientWidth) || window.innerWidth;
+            this.svgHeight = (node && node.clientHeight) || window.innerHeight;
 
             this.waveformSvg.attr("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`)
                 .attr("width", this.svgWidth)
@@ -37,6 +38,9 @@ class Visualizer {
 
             this.xScale.range([0, this.svgWidth]);
             this.yScale.range([this.svgHeight, 0]);
+
+            // Cache barWidth during resize for optimized update cycles
+            this.cachedBarWidth = this.svgWidth / this.barCount;
         }
     }
 
@@ -86,7 +90,7 @@ class Visualizer {
 
         const minBarHeight = this.svgHeight * 0.01;
         const samplesPerBar = Math.floor(dataArray.length / this.barCount);
-        const barWidth = this.svgWidth / this.barCount;
+        const barWidth = this.cachedBarWidth || (this.svgWidth / this.barCount);
 
         const barData = [];
         for (let i = 0; i < this.barCount; i++) {
@@ -108,10 +112,9 @@ class Visualizer {
 
         bars.enter().append("rect")
             .attr("class", "bar")
-            .attr("x", (d, i) => i * barWidth)
-            .attr("width", barWidth * 0.8)
             .merge(bars)
             .attr("x", (d, i) => i * barWidth + (barWidth * 0.1))
+            .attr("width", barWidth * 0.8)
             .attr("y", d => this.svgHeight - Math.max(minBarHeight, d * this.svgHeight))
             .attr("height", d => Math.max(minBarHeight, d * this.svgHeight))
             .attr("fill", d => this.colorScale(d));
