@@ -113,6 +113,9 @@ class InteractionHandler {
                 clearTimeout(timer);
                 this.pressTimers.delete(event.pointerId);
             }
+            if (this.activePointers.size === 0) {
+                this.isLongPress = false;
+            }
         });
     }
 
@@ -214,6 +217,8 @@ class InteractionHandler {
         const waveformSelect = document.getElementById('waveformSelect');
         const volumeSlider = document.getElementById('volumeSlider');
         const attackSlider = document.getElementById('attackSlider');
+        const decaySlider = document.getElementById('decaySlider');
+        const sustainSlider = document.getElementById('sustainSlider');
         const releaseSlider = document.getElementById('releaseSlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
         const delayTimeSelect = document.getElementById('delayTimeSelect');
@@ -232,6 +237,12 @@ class InteractionHandler {
         waveformSelect.addEventListener('change', (e) => this.audioEngine.updateWaveform(e.target.value));
         volumeSlider.addEventListener('input', (e) => this.audioEngine.setUserVolume(parseFloat(e.target.value)));
         attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
+        if (decaySlider) {
+            decaySlider.addEventListener('input', (e) => this.audioEngine.setDecay(parseFloat(e.target.value)));
+        }
+        if (sustainSlider) {
+            sustainSlider.addEventListener('input', (e) => this.audioEngine.setSustain(parseFloat(e.target.value)));
+        }
         releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
         delayWetSlider.addEventListener('input', (e) => this.audioEngine.setDelayWet(parseFloat(e.target.value)));
         if (delayTimeSelect) {
