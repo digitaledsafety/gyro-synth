@@ -15,6 +15,8 @@ def test_new_params_and_ui():
     # Check for new UI elements in index.html
     new_ui_elements = [
         'id="attackSlider"',
+        'id="decaySlider"',
+        'id="sustainSlider"',
         'id="releaseSlider"',
         'id="delayWetSlider"',
         'id="synthTypeSelect"'
@@ -27,6 +29,8 @@ def test_new_params_and_ui():
     # Check for event listeners in JS files
     listeners = [
         'attackSlider.addEventListener',
+        'decaySlider.addEventListener',
+        'sustainSlider.addEventListener',
         'releaseSlider.addEventListener',
         'delayWetSlider.addEventListener'
     ]
