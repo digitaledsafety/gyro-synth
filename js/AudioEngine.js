@@ -117,8 +117,8 @@ class AudioEngine {
      * Creates a new synth instance.
      */
     createSynth(waveform = null, synthType = null) {
-        const selectedWaveform = waveform || this.waveform || (document.getElementById('waveformSelect') ? document.getElementById('waveformSelect').value : 'sine');
-        const selectedSynthType = synthType || this.synthType || (document.getElementById('synthTypeSelect') ? document.getElementById('synthTypeSelect').value : 'FMSynth');
+        const selectedWaveform = waveform || this.waveform;
+        const selectedSynthType = synthType || this.synthType;
 
         const settings = {
             oscillator: { type: selectedWaveform },
@@ -189,6 +189,7 @@ class AudioEngine {
      */
     getNormalizedFrequency() {
         let rawFreq = ((Math.sin(this.beta * (Math.PI / 180))) * this.maxFrequency + this.maxFrequency) / 2;
+        rawFreq = Math.max(50, rawFreq);
         if (this.currentScaleConfig && this.currentScaleConfig.intervals && this.generatedScaleFrequencies.length > 0) {
             rawFreq = this.getSnappedFrequency(rawFreq);
         }
@@ -354,9 +355,25 @@ class AudioEngine {
     }
     async setReverbDecay(value) {
         this.reverbDecay = value;
-        if (this.reverbNode) {
-            this.reverbNode.decay = value;
-            await this.reverbNode.generate();
+        if (this.reverbNode && !this.reverbNode.disposed) {
+            if (this._generatingReverb) {
+                this._pendingReverbDecay = value;
+                return;
+            }
+            this._generatingReverb = true;
+            try {
+                this.reverbNode.decay = value;
+                await this.reverbNode.generate();
+            } catch (err) {
+                console.error("Error generating reverb:", err);
+            } finally {
+                this._generatingReverb = false;
+                if (this._pendingReverbDecay !== undefined) {
+                    const nextValue = this._pendingReverbDecay;
+                    this._pendingReverbDecay = undefined;
+                    await this.setReverbDecay(nextValue);
+                }
+            }
         }
     }
     updateWaveform(waveform) {
