@@ -48,6 +48,8 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#reverbWetSlider')).toBeVisible();
     await expect(page.locator('#reverbDecaySlider')).toBeVisible();
     await expect(page.locator('#delayTimeSelect')).toBeVisible();
+    await expect(page.locator('#filterCutoffSlider')).toBeVisible();
+    await expect(page.locator('#filterQSlider')).toBeVisible();
   });
 
   test('should display beta and gamma values', async ({ page }) => {
@@ -128,6 +130,8 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#reverbDecaySlider')).toHaveAttribute('aria-label', 'Reverb Decay Time');
     await expect(page.locator('#delayWetSlider')).toHaveAttribute('aria-label', 'Delay Wet Level');
     await expect(page.locator('#volumeSlider')).toHaveAttribute('aria-label', 'Master Volume Level');
+    await expect(page.locator('#filterCutoffSlider')).toHaveAttribute('aria-label', 'Filter Cutoff Frequency');
+    await expect(page.locator('#filterQSlider')).toHaveAttribute('aria-label', 'Filter Resonance Q');
   });
 
   test('should not show settings modal on keypress "m" when start overlay is active', async ({ page }) => {
