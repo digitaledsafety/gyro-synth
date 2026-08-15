@@ -61,6 +61,11 @@ def test_extended_js_logic():
         print("Missing Tone.Panner initialization")
         return False
 
+    # Check for Low-pass filter node
+    if 'this.filterNode = new Tone.Filter' not in content:
+        print("Missing filterNode initialization")
+        return False
+
     return True
 
 if __name__ == "__main__":
