@@ -31,20 +31,23 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await page.locator('#startButton').click();
     await expect(page.locator('#startOverlay')).toBeHidden();
 
-    // Open settings (assuming 'm' key or similar, but let's check if it exists in DOM)
+    // Open settings modal via keydown 'm'
     const modal = page.locator('#settingsModal');
 
-    // Trigger settings modal via keydown 'm'
     await page.keyboard.press('m');
     await expect(modal).toBeVisible();
 
     await expect(page.locator('#rootNoteSelect')).toBeVisible();
     await expect(page.locator('#scaleSelect')).toBeVisible();
     await expect(page.locator('#waveformSelect')).toBeVisible();
+    await expect(page.locator('#attackSlider')).toBeVisible();
+    await expect(page.locator('#decaySlider')).toBeVisible();
+    await expect(page.locator('#sustainSlider')).toBeVisible();
+    await expect(page.locator('#releaseSlider')).toBeVisible();
     await expect(page.locator('#volumeSlider')).toBeVisible();
     await expect(page.locator('#clearAllBtn')).toBeVisible();
 
-    // Check new parameters/controls
+    // Check effect and system parameters
     await expect(page.locator('#reverbWetSlider')).toBeVisible();
     await expect(page.locator('#reverbDecaySlider')).toBeVisible();
     await expect(page.locator('#delayTimeSelect')).toBeVisible();
@@ -123,6 +126,8 @@ test.describe('Gyro Synth Frontend Tests', () => {
 
     // Check slider labels
     await expect(page.locator('#attackSlider')).toHaveAttribute('aria-label', 'Synth Attack Time');
+    await expect(page.locator('#decaySlider')).toHaveAttribute('aria-label', 'Synth Decay Time');
+    await expect(page.locator('#sustainSlider')).toHaveAttribute('aria-label', 'Synth Sustain Level');
     await expect(page.locator('#releaseSlider')).toHaveAttribute('aria-label', 'Synth Release Time');
     await expect(page.locator('#reverbWetSlider')).toHaveAttribute('aria-label', 'Reverb Wet Level');
     await expect(page.locator('#reverbDecaySlider')).toHaveAttribute('aria-label', 'Reverb Decay Time');

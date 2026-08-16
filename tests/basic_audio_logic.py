@@ -20,9 +20,15 @@ def test_js_logic_integrity():
         print("Missing Tone.FeedbackDelay")
         return False
 
-    # Check for attack and release variables/properties
+    # Check for ADSR variables/properties
     if 'this.attackTime = 0.1;' not in content and 'let attackTime = 0.1;' not in content:
         print("Missing attackTime")
+        return False
+    if 'this.decayTime = 0.2;' not in content:
+        print("Missing decayTime")
+        return False
+    if 'this.sustainLevel = 0.8;' not in content:
+        print("Missing sustainLevel")
         return False
     if 'this.releaseTime = 0.5;' not in content and 'let releaseTime = 0.5;' not in content:
         print("Missing releaseTime")
@@ -49,6 +55,16 @@ def test_js_logic_integrity():
     # Check for UI update logic
     if 'frequencyDisplay' not in content:
         print("Missing frequencyDisplay")
+        return False
+
+    # Check for updateEnvelopeProperty helper
+    if 'updateEnvelopeProperty' not in content:
+        print("Missing updateEnvelopeProperty method")
+        return False
+
+    # Check for async reverb lock
+    if '_generatingReverb' not in content:
+        print("Missing _generatingReverb lock")
         return False
 
     return True

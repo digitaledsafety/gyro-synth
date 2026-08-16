@@ -10,6 +10,7 @@ class Visualizer {
         this.visMode = 'waveform';
         this.svgWidth = 0;
         this.svgHeight = 0;
+        this.barWidth = 0;
         this.colorScale = d3.scaleLinear()
             .domain([0, 0.5, 1])
             .range(["#3498db", "#f1c40f", "#e74c3c"]);
@@ -28,8 +29,10 @@ class Visualizer {
 
     resize() {
         if (this.waveformSvg) {
-            this.svgWidth = window.innerWidth;
-            this.svgHeight = window.innerHeight;
+            const node = this.waveformSvg.node();
+            this.svgWidth = (node && node.clientWidth) ? node.clientWidth : window.innerWidth;
+            this.svgHeight = (node && node.clientHeight) ? node.clientHeight : window.innerHeight;
+            this.barWidth = this.svgWidth / this.barCount;
 
             this.waveformSvg.attr("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`)
                 .attr("width", this.svgWidth)
@@ -79,14 +82,14 @@ class Visualizer {
         let visualGain = 2.0;
         if (this.visMode === 'frequency') {
             dataArray = this.audioEngine.fftAnalyzer.getValue();
-            visualGain = 1.0; // FFT values are already in dB or normalized differently
+            visualGain = 1.0;
         } else {
             dataArray = this.audioEngine.waveformAnalyzer.getValue();
         }
 
         const minBarHeight = this.svgHeight * 0.01;
         const samplesPerBar = Math.floor(dataArray.length / this.barCount);
-        const barWidth = this.svgWidth / this.barCount;
+        const barWidth = this.barWidth || (this.svgWidth / this.barCount);
 
         const barData = [];
         for (let i = 0; i < this.barCount; i++) {
@@ -94,7 +97,6 @@ class Visualizer {
             for (let j = 0; j < samplesPerBar; j++) {
                 let val = dataArray[i * samplesPerBar + j];
                 if (this.visMode === 'frequency') {
-                    // Convert dB to a 0-1 range (approx)
                     val = (val + 140) / 140;
                 } else {
                     val = Math.abs(val);
@@ -112,6 +114,7 @@ class Visualizer {
             .attr("width", barWidth * 0.8)
             .merge(bars)
             .attr("x", (d, i) => i * barWidth + (barWidth * 0.1))
+            .attr("width", barWidth * 0.8)
             .attr("y", d => this.svgHeight - Math.max(minBarHeight, d * this.svgHeight))
             .attr("height", d => Math.max(minBarHeight, d * this.svgHeight))
             .attr("fill", d => this.colorScale(d));
