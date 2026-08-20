@@ -215,6 +215,8 @@ class InteractionHandler {
         const volumeSlider = document.getElementById('volumeSlider');
         const attackSlider = document.getElementById('attackSlider');
         const releaseSlider = document.getElementById('releaseSlider');
+        const filterCutoffSlider = document.getElementById('filterCutoffSlider');
+        const filterQSlider = document.getElementById('filterQSlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
         const delayTimeSelect = document.getElementById('delayTimeSelect');
         const reverbWetSlider = document.getElementById('reverbWetSlider');
@@ -233,6 +235,12 @@ class InteractionHandler {
         volumeSlider.addEventListener('input', (e) => this.audioEngine.setUserVolume(parseFloat(e.target.value)));
         attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
         releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
+        if (filterCutoffSlider) {
+            filterCutoffSlider.addEventListener('input', (e) => this.audioEngine.setFilterCutoff(parseFloat(e.target.value)));
+        }
+        if (filterQSlider) {
+            filterQSlider.addEventListener('input', (e) => this.audioEngine.setFilterQ(parseFloat(e.target.value)));
+        }
         delayWetSlider.addEventListener('input', (e) => this.audioEngine.setDelayWet(parseFloat(e.target.value)));
         if (delayTimeSelect) {
             delayTimeSelect.addEventListener('change', (e) => this.audioEngine.setDelayTime(e.target.value));

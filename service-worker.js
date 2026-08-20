@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gyro-synth-cache-v4';
+const CACHE_NAME = 'gyro-synth-cache-v5';
 const urlsToCache = [
   'index.html',
   'js/main.js',
