@@ -136,4 +136,22 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should clear all active sounds when clear button is clicked', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Open settings and click Clear All Sounds button
+    await page.keyboard.press('m');
+    await expect(page.locator('#settingsModal')).toBeVisible();
+
+    const clearBtn = page.locator('#clearAllBtn');
+    await clearBtn.click();
+
+    // Verify audio engine state reset via page evaluation
+    const activeLoopsCount = await page.evaluate(() => {
+      return audioEngine.savedLoops.length + (audioEngine.previewLoop ? 1 : 0) + (audioEngine.instrument ? 1 : 0);
+    });
+    expect(activeLoopsCount).toBe(0);
+  });
 });
