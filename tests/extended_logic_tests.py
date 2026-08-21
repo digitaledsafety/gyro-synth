@@ -61,6 +61,21 @@ def test_extended_js_logic():
         print("Missing Tone.Panner initialization")
         return False
 
+    # Check for Reverb decay queuing state
+    if '_generatingReverb' not in content or '_pendingReverbDecay' not in content:
+        print("Missing reverb decay queuing state properties")
+        return False
+
+    # Check for isAppStarted state tracking in main.js
+    if 'isAppStarted = false' not in content and 'isAppStarted = true' not in content:
+        print("Missing isAppStarted state tracking variable")
+        return False
+
+    # Check for cached barsSelection in Visualizer.js
+    if 'this.barsSelection' not in content:
+        print("Missing barsSelection cached selection in Visualizer.js")
+        return False
+
     return True
 
 if __name__ == "__main__":
