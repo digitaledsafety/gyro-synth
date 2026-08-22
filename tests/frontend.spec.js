@@ -101,6 +101,18 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await page.mouse.up();
   });
 
+  test('should open settings modal when openSettingsBtn is clicked', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    const openBtn = page.locator('#openSettingsBtn');
+    await expect(openBtn).toBeVisible();
+    await openBtn.click();
+
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+  });
+
   test('should verify accessibility properties on key interactive components', async ({ page }) => {
     // Check overlay start button accessibility label
     const startButton = page.locator('#startButton');
@@ -109,6 +121,11 @@ test.describe('Gyro Synth Frontend Tests', () => {
     // Click start to expose settings button
     await startButton.click();
     await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Check open settings button accessibility
+    const openSettingsBtn = page.locator('#openSettingsBtn');
+    await expect(openSettingsBtn).toHaveAttribute('aria-label', 'Open settings');
+
     await page.keyboard.press('m');
 
     // Check modal close button accessibility

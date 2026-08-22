@@ -61,6 +61,16 @@ def test_extended_js_logic():
         print("Missing Tone.Panner initialization")
         return False
 
+    # Check for openSettingsBtn presence in index.html and event listener in JS
+    with open('index.html', 'r') as f:
+        html_content = f.read()
+    if 'id="openSettingsBtn"' not in html_content:
+        print("Missing openSettingsBtn in index.html")
+        return False
+    if 'openSettingsBtn' not in content:
+        print("Missing openSettingsBtn handler in JS")
+        return False
+
     return True
 
 if __name__ == "__main__":
