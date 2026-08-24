@@ -51,6 +51,11 @@ def test_js_logic_integrity():
         print("Missing frequencyDisplay")
         return False
 
+    # Check for dynamic envelope update helper
+    if 'updateEnvelopeProperty' not in content:
+        print("Missing updateEnvelopeProperty method")
+        return False
+
     return True
 
 if __name__ == "__main__":
