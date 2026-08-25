@@ -14,6 +14,8 @@ class AudioEngine {
         this.fftAnalyzer = null; // Tone.FFT analyzer
 
         this.attackTime = 0.1;
+        this.decayTime = 0.2;
+        this.sustainLevel = 0.8;
         this.releaseTime = 0.5;
         this.delayWet = 0.3;
         this.userVolume = 0.8;
@@ -25,6 +27,8 @@ class AudioEngine {
         this.reverbDecay = 2.0;
         this.delayTime = '8n';
         this.reverbNode = null;
+        this._generatingReverb = false;
+        this._pendingReverbDecay = undefined;
 
         this.currentScaleConfig = null;
         this.generatedScaleFrequencies = [];
@@ -124,6 +128,8 @@ class AudioEngine {
             oscillator: { type: selectedWaveform },
             envelope: {
                 attack: this.attackTime,
+                decay: this.decayTime,
+                sustain: this.sustainLevel,
                 release: this.releaseTime
             }
         };
@@ -139,6 +145,8 @@ class AudioEngine {
                         oscillator: { type: selectedWaveform },
                         envelope: {
                             attack: this.attackTime,
+                            decay: this.decayTime,
+                            sustain: this.sustainLevel,
                             release: this.releaseTime
                         }
                     },
@@ -146,6 +154,8 @@ class AudioEngine {
                         oscillator: { type: selectedWaveform },
                         envelope: {
                             attack: this.attackTime,
+                            decay: this.decayTime,
+                            sustain: this.sustainLevel,
                             release: this.releaseTime
                         }
                     }
@@ -338,8 +348,41 @@ class AudioEngine {
         Tone.Destination.volume.rampTo(volumeDb, 0.1);
     }
 
-    setAttack(value) { this.attackTime = value; }
-    setRelease(value) { this.releaseTime = value; }
+    updateEnvelopeProperty(property, value) {
+        const propMap = {
+            attack: 'attackTime',
+            decay: 'decayTime',
+            sustain: 'sustainLevel',
+            release: 'releaseTime'
+        };
+        if (propMap[property]) {
+            this[propMap[property]] = value;
+        }
+
+        const applyToSynth = (synth) => {
+            if (!synth) return;
+            if (synth.voice0 && synth.voice1) {
+                if (synth.voice0.envelope && property in synth.voice0.envelope) {
+                    synth.voice0.envelope[property] = value;
+                }
+                if (synth.voice1.envelope && property in synth.voice1.envelope) {
+                    synth.voice1.envelope[property] = value;
+                }
+            } else if (synth.envelope && property in synth.envelope) {
+                synth.envelope[property] = value;
+            }
+        };
+
+        applyToSynth(this.instrument);
+        if (this.previewLoop) applyToSynth(this.previewLoop.synth);
+        this.savedLoops.forEach(loop => applyToSynth(loop.synth));
+    }
+
+    setAttack(value) { this.updateEnvelopeProperty('attack', value); }
+    setDecay(value) { this.updateEnvelopeProperty('decay', value); }
+    setSustain(value) { this.updateEnvelopeProperty('sustain', value); }
+    setRelease(value) { this.updateEnvelopeProperty('release', value); }
+
     setDelayWet(value) {
         this.delayWet = value;
         if (this.delayNode) this.delayNode.wet.rampTo(this.delayWet, 0.1);
@@ -354,9 +397,20 @@ class AudioEngine {
     }
     async setReverbDecay(value) {
         this.reverbDecay = value;
-        if (this.reverbNode) {
-            this.reverbNode.decay = value;
-            await this.reverbNode.generate();
+        if (!this.reverbNode) return;
+        if (this._generatingReverb) {
+            this._pendingReverbDecay = value;
+            return;
+        }
+        this._generatingReverb = true;
+        this.reverbNode.decay = value;
+        await this.reverbNode.generate();
+        this._generatingReverb = false;
+
+        if (this._pendingReverbDecay !== undefined) {
+            const nextVal = this._pendingReverbDecay;
+            this._pendingReverbDecay = undefined;
+            await this.setReverbDecay(nextVal);
         }
     }
     updateWaveform(waveform) {
