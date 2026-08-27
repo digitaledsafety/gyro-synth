@@ -136,4 +136,42 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should open settings modal when floating settings button is clicked', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    const openBtn = page.locator('#openSettingsBtn');
+    await expect(openBtn).toBeVisible();
+    await expect(openBtn).toHaveAttribute('aria-label', 'Open settings');
+
+    await openBtn.click();
+    await expect(page.locator('#settingsModal')).toBeVisible();
+  });
+
+  test('should handle rapid reverb decay changes without throwing errors', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Evaluate setReverbDecay calls directly on audioEngine
+    const result = await page.evaluate(async () => {
+      try {
+        const engine = audioEngine;
+        const p1 = engine.setReverbDecay(1.5);
+        const p2 = engine.setReverbDecay(3.0);
+        const p3 = engine.setReverbDecay(2.5);
+        await Promise.all([p1, p2, p3]);
+        return { success: true, decay: engine.reverbDecay };
+      } catch (err) {
+        return { success: false, error: String(err) + '\n' + (err.stack || '') };
+      }
+    });
+
+    if (!result.success) {
+      console.log('Test evaluation error:', result.error);
+    }
+
+    expect(result.success).toBe(true);
+    expect(result.decay).toBe(2.5);
+  });
 });

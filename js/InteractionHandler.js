@@ -58,6 +58,12 @@ class InteractionHandler {
                 this.updateVirtualOrientation(event.clientX, event.clientY);
             }
 
+            // Clear any previous press timer for this pointerId to prevent timer leaks
+            const existingTimer = this.pressTimers.get(event.pointerId);
+            if (existingTimer) {
+                clearTimeout(existingTimer);
+            }
+
             const timer = setTimeout(() => {
                 if (this.isLongPress) return;
                 this.isLongPress = true;
@@ -184,9 +190,14 @@ class InteractionHandler {
     setupUIEvents() {
         const startButton = document.getElementById('startButton');
         const startOverlay = document.getElementById('startOverlay');
+        const openSettingsBtn = document.getElementById('openSettingsBtn');
         const closeSettingsBtn = document.getElementById('closeSettingsBtn');
         const settingsModal = document.getElementById('settingsModal');
         const clearAllBtn = document.getElementById('clearAllBtn');
+
+        if (openSettingsBtn) {
+            openSettingsBtn.addEventListener('click', () => this.showSettings());
+        }
 
         startButton.addEventListener('click', async () => {
             await Tone.start();
