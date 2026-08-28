@@ -27,4 +27,12 @@ console.assert(testSnapping(350, scale) === 300 || testSnapping(350, scale) === 
 console.assert(testSnapping(50, scale) === 100, "Should snap 50 to 100");
 console.assert(testSnapping(500, scale) === 400, "Should snap 500 to 400");
 
+function testFrequencyClamp(rawFreq) {
+    return Math.max(50, rawFreq);
+}
+
+console.assert(testFrequencyClamp(0) === 50, "Should clamp 0 Hz to 50 Hz threshold");
+console.assert(testFrequencyClamp(-10) === 50, "Should clamp negative frequencies to 50 Hz threshold");
+console.assert(testFrequencyClamp(440) === 440, "Should preserve frequency above 50 Hz threshold");
+
 console.log("Snapping logic tests passed!");
