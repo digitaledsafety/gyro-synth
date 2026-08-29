@@ -136,4 +136,17 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should open settings modal when floating settings button is clicked', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    const openSettingsBtn = page.locator('#openSettingsBtn');
+    await expect(openSettingsBtn).toBeVisible();
+    await openSettingsBtn.click();
+
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+    await page.screenshot({ path: 'screenshot.png' });
+  });
 });
