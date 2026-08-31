@@ -25,6 +25,8 @@ class AudioEngine {
         this.reverbDecay = 2.0;
         this.delayTime = '8n';
         this.reverbNode = null;
+        this._generatingReverb = false;
+        this._pendingReverbDecay = null;
 
         this.currentScaleConfig = null;
         this.generatedScaleFrequencies = [];
@@ -253,10 +255,22 @@ class AudioEngine {
     }
 
     /**
+     * Ensures audio context and graph are started and initialized.
+     */
+    async startSounds() {
+        if (Tone.context.state !== 'running') {
+            await Tone.start();
+        }
+        if (!this.masterBus) {
+            await this.init();
+        }
+    }
+
+    /**
      * Toggles the continuous single note.
      */
-    toggleContinuousNote() {
-        if (Tone.context.state !== 'running') Tone.start();
+    async toggleContinuousNote() {
+        await this.startSounds();
 
         if (this.instrument && this.instrument.active) {
             const currentInstrument = this.instrument;
@@ -276,8 +290,8 @@ class AudioEngine {
     /**
      * Starts the dynamic preview loop.
      */
-    startPreviewLoop() {
-        if (Tone.context.state !== 'running') Tone.start();
+    async startPreviewLoop() {
+        await this.startSounds();
 
         if (this.instrument) {
             this.instrument.dispose();
@@ -305,8 +319,8 @@ class AudioEngine {
     /**
      * Adds a fixed loop at the current frequency.
      */
-    addFixedLoop() {
-        if (Tone.context.state !== 'running') Tone.start();
+    async addFixedLoop() {
+        await this.startSounds();
 
         const fixedFrequency = this.getNormalizedFrequency();
         const synth = this.createSynth();
@@ -354,9 +368,22 @@ class AudioEngine {
     }
     async setReverbDecay(value) {
         this.reverbDecay = value;
-        if (this.reverbNode) {
+        if (!this.reverbNode) return;
+        if (this._generatingReverb) {
+            this._pendingReverbDecay = value;
+            return;
+        }
+        this._generatingReverb = true;
+        try {
             this.reverbNode.decay = value;
             await this.reverbNode.generate();
+        } finally {
+            this._generatingReverb = false;
+            if (this._pendingReverbDecay !== null && this._pendingReverbDecay !== undefined) {
+                const nextValue = this._pendingReverbDecay;
+                this._pendingReverbDecay = null;
+                await this.setReverbDecay(nextValue);
+            }
         }
     }
     updateWaveform(waveform) {
