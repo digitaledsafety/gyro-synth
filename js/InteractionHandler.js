@@ -46,25 +46,27 @@ class InteractionHandler {
     setupPointerEvents() {
         const svg = this.visualizer.waveformSvg;
 
-        svg.on("pointerdown", (event) => {
+        svg.on("pointerdown", async (event) => {
             this.activePointers.add(event.pointerId);
+            this.pressTimers.forEach((t) => clearTimeout(t));
+            this.pressTimers.clear();
+
             if (this.activePointers.size === 1) {
                 this.isLongPress = false;
             }
             this.visualizer.createRipple(event.clientX, event.clientY);
 
-            // Handle virtual orientation fallback if real orientation isn't present
             if (!this.hasRealOrientation) {
                 this.updateVirtualOrientation(event.clientX, event.clientY);
             }
 
-            const timer = setTimeout(() => {
+            const timer = setTimeout(async () => {
                 if (this.isLongPress) return;
                 this.isLongPress = true;
                 if (this.activePointers.size >= 2) {
                     this.showSettings();
                 } else {
-                    this.audioEngine.toggleContinuousNote();
+                    await this.audioEngine.toggleContinuousNote();
                 }
             }, this.longPressDuration);
             this.pressTimers.set(event.pointerId, timer);
@@ -76,7 +78,7 @@ class InteractionHandler {
             }
         });
 
-        svg.on("pointerup", (event) => {
+        svg.on("pointerup", async (event) => {
             this.activePointers.delete(event.pointerId);
             const timer = this.pressTimers.get(event.pointerId);
             if (timer) {
@@ -96,9 +98,9 @@ class InteractionHandler {
                     this.lastTapTime = 0;
                 } else {
                     if (this.audioEngine.instrument || this.audioEngine.previewLoop || this.audioEngine.savedLoops.length > 0) {
-                        this.audioEngine.addFixedLoop();
+                        await this.audioEngine.addFixedLoop();
                     } else {
-                        this.audioEngine.startPreviewLoop();
+                        await this.audioEngine.startPreviewLoop();
                     }
                     this.lastTapTime = currentTime;
                 }
@@ -185,6 +187,7 @@ class InteractionHandler {
         const startButton = document.getElementById('startButton');
         const startOverlay = document.getElementById('startOverlay');
         const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const openSettingsBtn = document.getElementById('openSettingsBtn');
         const settingsModal = document.getElementById('settingsModal');
         const clearAllBtn = document.getElementById('clearAllBtn');
 
@@ -202,6 +205,9 @@ class InteractionHandler {
         });
 
         closeSettingsBtn.addEventListener('click', () => this.hideSettings());
+        if (openSettingsBtn) {
+            openSettingsBtn.addEventListener('click', () => this.showSettings());
+        }
         settingsModal.addEventListener('click', (e) => {
             if (e.target === settingsModal) this.hideSettings();
         });

@@ -136,4 +136,31 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should open settings modal using floating settings button', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    const openSettingsBtn = page.locator('#openSettingsBtn');
+    await expect(openSettingsBtn).toBeVisible();
+    await openSettingsBtn.click();
+
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+  });
+
+  test('should update reverb decay value without errors', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    await page.locator('#openSettingsBtn').click();
+    await expect(page.locator('#settingsModal')).toBeVisible();
+
+    const reverbDecaySlider = page.locator('#reverbDecaySlider');
+    await expect(reverbDecaySlider).toBeVisible();
+    await reverbDecaySlider.fill('3.5');
+    await reverbDecaySlider.dispatchEvent('change');
+
+    await expect(reverbDecaySlider).toHaveValue('3.5');
+  });
 });
