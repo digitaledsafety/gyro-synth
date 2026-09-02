@@ -61,6 +61,15 @@ def test_extended_js_logic():
         print("Missing Tone.Panner initialization")
         return False
 
+    # Check for wake lock re-acquisition logic on visibilitychange
+    if 'visibilitychange' not in content:
+        print("Missing visibilitychange event listener")
+        return False
+
+    if "if (document.visibilityState === 'visible')" not in content:
+        print("Missing unconditional wake lock re-acquisition check on visible state")
+        return False
+
     return True
 
 if __name__ == "__main__":
