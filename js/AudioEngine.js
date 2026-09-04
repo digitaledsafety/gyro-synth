@@ -25,6 +25,9 @@ class AudioEngine {
         this.reverbDecay = 2.0;
         this.delayTime = '8n';
         this.reverbNode = null;
+        this.filterCutoff = 20000;
+        this.filterQ = 1.0;
+        this.filterNode = null;
 
         this.currentScaleConfig = null;
         this.generatedScaleFrequencies = [];
@@ -70,8 +73,11 @@ class AudioEngine {
         this.delayNode = new Tone.FeedbackDelay(this.delayTime, 0.5);
         this.delayNode.wet.value = this.delayWet;
 
+        this.filterNode = new Tone.Filter(this.filterCutoff, "lowpass");
+        this.filterNode.Q.value = this.filterQ;
+
         this.panner = new Tone.Panner(0).toDestination();
-        this.masterBus.chain(lowBump, masterCompressor, this.delayNode, reverb, this.panner);
+        this.masterBus.chain(lowBump, masterCompressor, this.delayNode, reverb, this.filterNode, this.panner);
 
         this.waveformAnalyzer = new Tone.Waveform(1024);
         this.fftAnalyzer = new Tone.FFT(1024);
@@ -222,18 +228,18 @@ class AudioEngine {
         Tone.getTransport().clear();
 
         if (this.instrument) {
-            this.instrument.triggerRelease();
+            try { this.instrument.triggerRelease(); } catch (e) {}
             const toDispose = this.instrument;
-            setTimeout(() => toDispose.dispose(), this.releaseTime * 1000 + 100);
+            setTimeout(() => { try { toDispose.dispose(); } catch (e) {} }, this.releaseTime * 1000 + 100);
             this.instrument = null;
         }
 
         if (this.previewLoop) {
             this.previewLoop.stop();
             if (this.previewLoop.synth) {
-                this.previewLoop.synth.triggerRelease();
+                try { this.previewLoop.synth.triggerRelease(); } catch (e) {}
                 const toDispose = this.previewLoop.synth;
-                setTimeout(() => toDispose.dispose(), this.releaseTime * 1000 + 100);
+                setTimeout(() => { try { toDispose.dispose(); } catch (e) {} }, this.releaseTime * 1000 + 100);
             }
             this.previewLoop.dispose();
             this.previewLoop = null;
@@ -242,9 +248,9 @@ class AudioEngine {
         this.savedLoops.forEach(loop => {
             loop.stop();
             if (loop.synth) {
-                loop.synth.triggerRelease();
+                try { loop.synth.triggerRelease(); } catch (e) {}
                 const toDispose = loop.synth;
-                setTimeout(() => toDispose.dispose(), this.releaseTime * 1000 + 100);
+                setTimeout(() => { try { toDispose.dispose(); } catch (e) {} }, this.releaseTime * 1000 + 100);
             }
             loop.dispose();
         });
@@ -280,13 +286,19 @@ class AudioEngine {
         if (Tone.context.state !== 'running') Tone.start();
 
         if (this.instrument) {
-            this.instrument.dispose();
+            try { this.instrument.triggerRelease(); } catch (e) {}
+            const toDispose = this.instrument;
+            setTimeout(() => { try { toDispose.dispose(); } catch (e) {} }, this.releaseTime * 1000 + 100);
             this.instrument = null;
         }
 
         if (this.previewLoop) {
             this.previewLoop.stop();
-            if (this.previewLoop.synth) this.previewLoop.synth.dispose();
+            if (this.previewLoop.synth) {
+                try { this.previewLoop.synth.triggerRelease(); } catch (e) {}
+                const toDispose = this.previewLoop.synth;
+                setTimeout(() => { try { toDispose.dispose(); } catch (e) {} }, this.releaseTime * 1000 + 100);
+            }
             this.previewLoop.dispose();
             this.previewLoop = null;
         }
@@ -358,6 +370,14 @@ class AudioEngine {
             this.reverbNode.decay = value;
             await this.reverbNode.generate();
         }
+    }
+    setFilterCutoff(value) {
+        this.filterCutoff = value;
+        if (this.filterNode) this.filterNode.frequency.rampTo(this.filterCutoff, 0.1);
+    }
+    setFilterQ(value) {
+        this.filterQ = value;
+        if (this.filterNode) this.filterNode.Q.rampTo(this.filterQ, 0.1);
     }
     updateWaveform(waveform) {
         this.waveform = waveform;
