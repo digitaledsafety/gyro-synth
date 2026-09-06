@@ -95,7 +95,7 @@ class Visualizer {
                 let val = dataArray[i * samplesPerBar + j];
                 if (this.visMode === 'frequency') {
                     // Convert dB to a 0-1 range (approx)
-                    val = (val + 140) / 140;
+                    val = Math.max(0, (val + 140) / 140);
                 } else {
                     val = Math.abs(val);
                 }
