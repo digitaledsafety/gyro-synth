@@ -7,7 +7,7 @@
       // Function to request a screen wake lock
       async function requestWakeLock() {
         try {
-          if ('wakeLock' in navigator) {
+          if ('wakeLock' in navigator && wakeLock === null) {
             wakeLock = await navigator.wakeLock.request('screen');
             wakeLock.addEventListener('release', () => {
               wakeLock = null;

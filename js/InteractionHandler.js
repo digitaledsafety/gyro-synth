@@ -184,9 +184,14 @@ class InteractionHandler {
     setupUIEvents() {
         const startButton = document.getElementById('startButton');
         const startOverlay = document.getElementById('startOverlay');
+        const openSettingsBtn = document.getElementById('openSettingsBtn');
         const closeSettingsBtn = document.getElementById('closeSettingsBtn');
         const settingsModal = document.getElementById('settingsModal');
         const clearAllBtn = document.getElementById('clearAllBtn');
+
+        if (openSettingsBtn) {
+            openSettingsBtn.addEventListener('click', () => this.showSettings());
+        }
 
         startButton.addEventListener('click', async () => {
             await Tone.start();
