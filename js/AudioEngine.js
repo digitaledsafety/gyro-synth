@@ -25,6 +25,8 @@ class AudioEngine {
         this.reverbDecay = 2.0;
         this.delayTime = '8n';
         this.reverbNode = null;
+        this._generatingReverb = false;
+        this._pendingReverbDecay = null;
 
         this.currentScaleConfig = null;
         this.generatedScaleFrequencies = [];
@@ -189,6 +191,7 @@ class AudioEngine {
      */
     getNormalizedFrequency() {
         let rawFreq = ((Math.sin(this.beta * (Math.PI / 180))) * this.maxFrequency + this.maxFrequency) / 2;
+        rawFreq = Math.max(20, rawFreq);
         if (this.currentScaleConfig && this.currentScaleConfig.intervals && this.generatedScaleFrequencies.length > 0) {
             rawFreq = this.getSnappedFrequency(rawFreq);
         }
@@ -280,7 +283,9 @@ class AudioEngine {
         if (Tone.context.state !== 'running') Tone.start();
 
         if (this.instrument) {
-            this.instrument.dispose();
+            this.instrument.triggerRelease();
+            const toDispose = this.instrument;
+            setTimeout(() => toDispose.dispose(), this.releaseTime * 1000 + 100);
             this.instrument = null;
         }
 
@@ -354,9 +359,27 @@ class AudioEngine {
     }
     async setReverbDecay(value) {
         this.reverbDecay = value;
-        if (this.reverbNode) {
-            this.reverbNode.decay = value;
-            await this.reverbNode.generate();
+        if (!this.reverbNode) return;
+
+        if (this._generatingReverb) {
+            this._pendingReverbDecay = value;
+            return;
+        }
+
+        this._generatingReverb = true;
+        let nextDecay = value;
+
+        try {
+            while (nextDecay !== null) {
+                this._pendingReverbDecay = null;
+                this.reverbNode.decay = nextDecay;
+                await this.reverbNode.generate();
+                nextDecay = this._pendingReverbDecay;
+            }
+        } catch (err) {
+            console.error("Error generating reverb decay:", err);
+        } finally {
+            this._generatingReverb = false;
         }
     }
     updateWaveform(waveform) {

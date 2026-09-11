@@ -184,6 +184,7 @@ class InteractionHandler {
     setupUIEvents() {
         const startButton = document.getElementById('startButton');
         const startOverlay = document.getElementById('startOverlay');
+        const openSettingsBtn = document.getElementById('openSettingsBtn');
         const closeSettingsBtn = document.getElementById('closeSettingsBtn');
         const settingsModal = document.getElementById('settingsModal');
         const clearAllBtn = document.getElementById('clearAllBtn');
@@ -201,6 +202,9 @@ class InteractionHandler {
             // Wake lock handled separately in main or here
         });
 
+        if (openSettingsBtn) {
+            openSettingsBtn.addEventListener('click', () => this.showSettings());
+        }
         closeSettingsBtn.addEventListener('click', () => this.hideSettings());
         settingsModal.addEventListener('click', (e) => {
             if (e.target === settingsModal) this.hideSettings();
