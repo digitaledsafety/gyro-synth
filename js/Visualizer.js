@@ -10,6 +10,7 @@ class Visualizer {
         this.visMode = 'waveform';
         this.svgWidth = 0;
         this.svgHeight = 0;
+        this.barsSelection = null;
         this.colorScale = d3.scaleLinear()
             .domain([0, 0.5, 1])
             .range(["#3498db", "#f1c40f", "#e74c3c"]);
@@ -26,6 +27,26 @@ class Visualizer {
         this.update();
     }
 
+    createBars() {
+        if (!this.waveformSvg || this.svgWidth === 0) return;
+        this.waveformSvg.selectAll(".bar").remove();
+        const barWidth = this.svgWidth / this.barCount;
+        const initialData = new Array(this.barCount).fill(0);
+
+        this.waveformSvg.selectAll(".bar")
+            .data(initialData)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", (d, i) => i * barWidth + (barWidth * 0.1))
+            .attr("width", barWidth * 0.8)
+            .attr("y", this.svgHeight)
+            .attr("height", 0)
+            .attr("fill", this.colorScale(0));
+
+        this.barsSelection = this.waveformSvg.selectAll(".bar");
+    }
+
     resize() {
         if (this.waveformSvg) {
             this.svgWidth = window.innerWidth;
@@ -37,12 +58,13 @@ class Visualizer {
 
             this.xScale.range([0, this.svgWidth]);
             this.yScale.range([this.svgHeight, 0]);
+            this.createBars();
         }
     }
 
     setVisMode(mode) {
         this.visMode = mode;
-        this.waveformSvg.selectAll(".bar").remove();
+        this.createBars();
     }
 
     createRipple(x, y) {
@@ -84,11 +106,14 @@ class Visualizer {
             dataArray = this.audioEngine.waveformAnalyzer.getValue();
         }
 
+        if (!this.barsSelection || this.barsSelection.empty()) {
+            this.createBars();
+        }
+
         const minBarHeight = this.svgHeight * 0.01;
         const samplesPerBar = Math.floor(dataArray.length / this.barCount);
-        const barWidth = this.svgWidth / this.barCount;
 
-        const barData = [];
+        const nodes = this.barsSelection ? this.barsSelection.nodes() : [];
         for (let i = 0; i < this.barCount; i++) {
             let sum = 0;
             for (let j = 0; j < samplesPerBar; j++) {
@@ -101,22 +126,17 @@ class Visualizer {
                 }
                 sum += Math.min(1.0, val * visualGain);
             }
-            barData.push(sum / samplesPerBar);
+            const avgVal = sum / samplesPerBar;
+            const h = Math.max(minBarHeight, avgVal * this.svgHeight);
+            const y = this.svgHeight - h;
+
+            const node = nodes[i];
+            if (node) {
+                node.setAttribute("y", y);
+                node.setAttribute("height", h);
+                node.setAttribute("fill", this.colorScale(avgVal));
+            }
         }
-
-        const bars = this.waveformSvg.selectAll(".bar").data(barData);
-
-        bars.enter().append("rect")
-            .attr("class", "bar")
-            .attr("x", (d, i) => i * barWidth)
-            .attr("width", barWidth * 0.8)
-            .merge(bars)
-            .attr("x", (d, i) => i * barWidth + (barWidth * 0.1))
-            .attr("y", d => this.svgHeight - Math.max(minBarHeight, d * this.svgHeight))
-            .attr("height", d => Math.max(minBarHeight, d * this.svgHeight))
-            .attr("fill", d => this.colorScale(d));
-
-        bars.exit().remove();
 
         const freq = this.audioEngine.getNormalizedFrequency();
         const display = document.getElementById('frequencyDisplay');
