@@ -70,6 +70,14 @@ def test_extended_js_logic():
         print("Missing unconditional wake lock re-acquisition check on visible state")
         return False
 
+    # Check for reverb serialization state properties
+    if '_generatingReverb' not in content:
+        print("Missing _generatingReverb state property")
+        return False
+    if '_pendingReverbDecay' not in content:
+        print("Missing _pendingReverbDecay state property")
+        return False
+
     return True
 
 if __name__ == "__main__":
