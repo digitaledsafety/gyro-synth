@@ -113,6 +113,9 @@ class InteractionHandler {
                 clearTimeout(timer);
                 this.pressTimers.delete(event.pointerId);
             }
+            if (this.activePointers.size === 0) {
+                this.isLongPress = false;
+            }
         });
     }
 
