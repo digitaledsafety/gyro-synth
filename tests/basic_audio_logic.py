@@ -51,6 +51,14 @@ def test_js_logic_integrity():
         print("Missing frequencyDisplay")
         return False
 
+    # Check for Filter Cutoff and Q
+    if 'this.filterCutoff = 20000;' not in content:
+        print("Missing filterCutoff")
+        return False
+    if 'this.filterQ = 1.0;' not in content:
+        print("Missing filterQ")
+        return False
+
     return True
 
 if __name__ == "__main__":
