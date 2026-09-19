@@ -136,4 +136,33 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should open settings modal using the floating settings button', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    const openSettingsBtn = page.locator('#openSettingsBtn');
+    await expect(openSettingsBtn).toBeVisible();
+    await expect(openSettingsBtn).toHaveAttribute('aria-label', 'Open Settings');
+
+    await openSettingsBtn.click();
+    await expect(page.locator('#settingsModal')).toBeVisible();
+
+    await page.locator('#closeSettingsBtn').click();
+    await expect(page.locator('#settingsModal')).toBeHidden();
+  });
+
+  test('should change visualization mode between waveform and frequency', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await page.locator('#openSettingsBtn').click();
+
+    const visModeSelect = page.locator('#visModeSelect');
+    await expect(visModeSelect).toBeVisible();
+
+    await visModeSelect.selectOption('frequency');
+    await expect(visModeSelect).toHaveValue('frequency');
+
+    await visModeSelect.selectOption('waveform');
+    await expect(visModeSelect).toHaveValue('waveform');
+  });
 });

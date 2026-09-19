@@ -23,6 +23,8 @@ class AudioEngine {
         this.synthType = 'FMSynth';
         this.reverbWet = 0.3;
         this.reverbDecay = 2.0;
+        this._generatingReverb = false;
+        this._pendingReverbDecay = null;
         this.delayTime = '8n';
         this.reverbNode = null;
 
@@ -354,9 +356,29 @@ class AudioEngine {
     }
     async setReverbDecay(value) {
         this.reverbDecay = value;
-        if (this.reverbNode) {
+        if (!this.reverbNode) return;
+
+        if (this._generatingReverb) {
+            this._pendingReverbDecay = value;
+            return;
+        }
+
+        this._generatingReverb = true;
+        try {
             this.reverbNode.decay = value;
             await this.reverbNode.generate();
+
+            while (this._pendingReverbDecay !== null && this._pendingReverbDecay !== undefined) {
+                const nextValue = this._pendingReverbDecay;
+                this._pendingReverbDecay = null;
+                this.reverbDecay = nextValue;
+                this.reverbNode.decay = nextValue;
+                await this.reverbNode.generate();
+            }
+        } catch (err) {
+            console.error("Error generating reverb decay:", err);
+        } finally {
+            this._generatingReverb = false;
         }
     }
     updateWaveform(waveform) {
