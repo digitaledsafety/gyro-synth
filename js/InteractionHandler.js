@@ -184,9 +184,14 @@ class InteractionHandler {
     setupUIEvents() {
         const startButton = document.getElementById('startButton');
         const startOverlay = document.getElementById('startOverlay');
+        const openSettingsBtn = document.getElementById('openSettingsBtn');
         const closeSettingsBtn = document.getElementById('closeSettingsBtn');
         const settingsModal = document.getElementById('settingsModal');
         const clearAllBtn = document.getElementById('clearAllBtn');
+
+        if (openSettingsBtn) {
+            openSettingsBtn.addEventListener('click', () => this.showSettings());
+        }
 
         startButton.addEventListener('click', async () => {
             await Tone.start();
@@ -241,6 +246,7 @@ class InteractionHandler {
             reverbWetSlider.addEventListener('input', (e) => this.audioEngine.setReverbWet(parseFloat(e.target.value)));
         }
         if (reverbDecaySlider) {
+            reverbDecaySlider.addEventListener('input', (e) => this.audioEngine.setReverbDecay(parseFloat(e.target.value)));
             reverbDecaySlider.addEventListener('change', (e) => this.audioEngine.setReverbDecay(parseFloat(e.target.value)));
         }
         visModeSelect.addEventListener('change', (e) => this.visualizer.setVisMode(e.target.value));
