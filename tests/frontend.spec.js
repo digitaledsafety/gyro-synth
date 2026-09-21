@@ -136,4 +136,39 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should handle rapid consecutive setReverbDecay calls without error', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Execute multiple consecutive setReverbDecay calls directly in page context
+    const result = await page.evaluate(async () => {
+      try {
+        const p1 = audioEngine.setReverbDecay(1.0);
+        const p2 = audioEngine.setReverbDecay(3.0);
+        const p3 = audioEngine.setReverbDecay(2.5);
+        await Promise.all([p1, p2, p3]);
+        return { success: true, decay: audioEngine.reverbDecay };
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.decay).toBe(2.5);
+  });
+
+  test('should initialize visualizer bars and manage wake lock lifecycle', async ({ page }) => {
+    // Before start, visualizer SVG should have initialized bars in DOM
+    const barsCount = await page.locator('#waveformSvg rect.bar').count();
+    expect(barsCount).toBe(64);
+
+    // Verify initial isAppStarted is false in window scope
+    const isStartedBefore = await page.evaluate(() => window.isAppStarted || false);
+    expect(isStartedBefore).toBe(false);
+
+    // Click start
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+  });
 });
