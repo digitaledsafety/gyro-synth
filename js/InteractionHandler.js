@@ -47,6 +47,10 @@ class InteractionHandler {
         const svg = this.visualizer.waveformSvg;
 
         svg.on("pointerdown", (event) => {
+            // Clear existing timers to prevent multiple concurrent triggers during multi-touch
+            this.pressTimers.forEach((timer) => clearTimeout(timer));
+            this.pressTimers.clear();
+
             this.activePointers.add(event.pointerId);
             if (this.activePointers.size === 1) {
                 this.isLongPress = false;
@@ -113,27 +117,20 @@ class InteractionHandler {
                 clearTimeout(timer);
                 this.pressTimers.delete(event.pointerId);
             }
+            if (this.activePointers.size === 0) {
+                this.isLongPress = false;
+            }
         });
     }
 
     updateVirtualOrientation(clientX, clientY) {
         // Map clientX/clientY to virtual beta and gamma values
-        // beta maps Y coordinate to pitch: top is max pitch, bottom is min pitch
-        // gamma maps X coordinate to stereo panning: left is -90 (full left), right is 90 (full right)
         const width = window.innerWidth;
         const height = window.innerHeight;
 
-        // beta range from -90 to 90 (or mapped normalized)
-        // In AudioEngine: let rawFreq = ((Math.sin(this.beta * (Math.PI / 180))) * this.maxFrequency + this.maxFrequency) / 2;
-        // So we want virtualBeta mapping to follow a full sine range or direct mapping.
-        // Let's map Y to an equivalent beta. Top (Y=0) is high pitch, Bottom (Y=height) is low pitch.
-        // If we map Y/height from 0 to 1, we can compute an angle beta such that Math.sin(beta * Radian) matches 1 to -1.
-        // At Y=0 (top), we want Math.sin(...) = 1 -> beta = 90.
-        // At Y=height (bottom), we want Math.sin(...) = -1 -> beta = -90.
         const yPct = clientY / height;
         const virtualBeta = 90 - (yPct * 180);
 
-        // gamma range -90 to 90
         const xPct = clientX / width;
         const virtualGamma = -90 + (xPct * 180);
 
@@ -151,7 +148,6 @@ class InteractionHandler {
                 this.hasRealOrientation = true;
             }
 
-            // Only override if real orientation is actually present/active
             if (this.hasRealOrientation) {
                 const beta = event.beta !== null ? event.beta.valueOf() : 0;
                 const gamma = event.gamma !== null ? event.gamma.valueOf() : 0;
@@ -169,7 +165,6 @@ class InteractionHandler {
     setupKeyboardEvents() {
         window.addEventListener("keydown", (e) => {
             const startOverlay = document.getElementById('startOverlay');
-            // If the start overlay is still active / visible, ignore 'm' or escape keys
             if (startOverlay && startOverlay.style.display !== 'none') {
                 return;
             }
@@ -198,7 +193,6 @@ class InteractionHandler {
                 }
             }
             startOverlay.style.display = 'none';
-            // Wake lock handled separately in main or here
         });
 
         closeSettingsBtn.addEventListener('click', () => this.hideSettings());
@@ -214,8 +208,11 @@ class InteractionHandler {
         const waveformSelect = document.getElementById('waveformSelect');
         const volumeSlider = document.getElementById('volumeSlider');
         const attackSlider = document.getElementById('attackSlider');
+        const decaySlider = document.getElementById('decaySlider');
+        const sustainSlider = document.getElementById('sustainSlider');
         const releaseSlider = document.getElementById('releaseSlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
+        const delayFeedbackSlider = document.getElementById('delayFeedbackSlider');
         const delayTimeSelect = document.getElementById('delayTimeSelect');
         const reverbWetSlider = document.getElementById('reverbWetSlider');
         const reverbDecaySlider = document.getElementById('reverbDecaySlider');
@@ -232,8 +229,17 @@ class InteractionHandler {
         waveformSelect.addEventListener('change', (e) => this.audioEngine.updateWaveform(e.target.value));
         volumeSlider.addEventListener('input', (e) => this.audioEngine.setUserVolume(parseFloat(e.target.value)));
         attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
+        if (decaySlider) {
+            decaySlider.addEventListener('input', (e) => this.audioEngine.setDecay(parseFloat(e.target.value)));
+        }
+        if (sustainSlider) {
+            sustainSlider.addEventListener('input', (e) => this.audioEngine.setSustain(parseFloat(e.target.value)));
+        }
         releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
         delayWetSlider.addEventListener('input', (e) => this.audioEngine.setDelayWet(parseFloat(e.target.value)));
+        if (delayFeedbackSlider) {
+            delayFeedbackSlider.addEventListener('input', (e) => this.audioEngine.setDelayFeedback(parseFloat(e.target.value)));
+        }
         if (delayTimeSelect) {
             delayTimeSelect.addEventListener('change', (e) => this.audioEngine.setDelayTime(e.target.value));
         }
