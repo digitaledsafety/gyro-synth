@@ -168,6 +168,9 @@ class InteractionHandler {
 
     setupKeyboardEvents() {
         window.addEventListener("keydown", (e) => {
+            if (e.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
+                return;
+            }
             const startOverlay = document.getElementById('startOverlay');
             // If the start overlay is still active / visible, ignore 'm' or escape keys
             if (startOverlay && startOverlay.style.display !== 'none') {
@@ -219,6 +222,8 @@ class InteractionHandler {
         const delayTimeSelect = document.getElementById('delayTimeSelect');
         const reverbWetSlider = document.getElementById('reverbWetSlider');
         const reverbDecaySlider = document.getElementById('reverbDecaySlider');
+        const filterCutoffSlider = document.getElementById('filterCutoffSlider');
+        const filterQSlider = document.getElementById('filterQSlider');
         const visModeSelect = document.getElementById('visModeSelect');
 
         const updateScaleSettings = () => {
@@ -242,6 +247,12 @@ class InteractionHandler {
         }
         if (reverbDecaySlider) {
             reverbDecaySlider.addEventListener('change', (e) => this.audioEngine.setReverbDecay(parseFloat(e.target.value)));
+        }
+        if (filterCutoffSlider) {
+            filterCutoffSlider.addEventListener('input', (e) => this.audioEngine.setFilterCutoff(parseFloat(e.target.value)));
+        }
+        if (filterQSlider) {
+            filterQSlider.addEventListener('input', (e) => this.audioEngine.setFilterQ(parseFloat(e.target.value)));
         }
         visModeSelect.addEventListener('change', (e) => this.visualizer.setVisMode(e.target.value));
     }
