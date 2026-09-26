@@ -14,6 +14,8 @@ class AudioEngine {
         this.fftAnalyzer = null; // Tone.FFT analyzer
 
         this.attackTime = 0.1;
+        this.decayTime = 0.1;
+        this.sustainLevel = 1.0;
         this.releaseTime = 0.5;
         this.delayWet = 0.3;
         this.userVolume = 0.8;
@@ -25,6 +27,9 @@ class AudioEngine {
         this.reverbDecay = 2.0;
         this.delayTime = '8n';
         this.reverbNode = null;
+
+        this._generatingReverb = false;
+        this._pendingReverbDecay = null;
 
         this.currentScaleConfig = null;
         this.generatedScaleFrequencies = [];
@@ -120,12 +125,16 @@ class AudioEngine {
         const selectedWaveform = waveform || this.waveform || (document.getElementById('waveformSelect') ? document.getElementById('waveformSelect').value : 'sine');
         const selectedSynthType = synthType || this.synthType || (document.getElementById('synthTypeSelect') ? document.getElementById('synthTypeSelect').value : 'FMSynth');
 
+        const envSettings = {
+            attack: this.attackTime,
+            decay: this.decayTime,
+            sustain: this.sustainLevel,
+            release: this.releaseTime
+        };
+
         const settings = {
             oscillator: { type: selectedWaveform },
-            envelope: {
-                attack: this.attackTime,
-                release: this.releaseTime
-            }
+            envelope: envSettings
         };
 
         let synth;
@@ -137,17 +146,11 @@ class AudioEngine {
                 const duoSettings = {
                     voice0: {
                         oscillator: { type: selectedWaveform },
-                        envelope: {
-                            attack: this.attackTime,
-                            release: this.releaseTime
-                        }
+                        envelope: envSettings
                     },
                     voice1: {
                         oscillator: { type: selectedWaveform },
-                        envelope: {
-                            attack: this.attackTime,
-                            release: this.releaseTime
-                        }
+                        envelope: envSettings
                     }
                 };
                 synth = new Tone.DuoSynth(duoSettings);
@@ -189,6 +192,7 @@ class AudioEngine {
      */
     getNormalizedFrequency() {
         let rawFreq = ((Math.sin(this.beta * (Math.PI / 180))) * this.maxFrequency + this.maxFrequency) / 2;
+        rawFreq = Math.max(50, rawFreq);
         if (this.currentScaleConfig && this.currentScaleConfig.intervals && this.generatedScaleFrequencies.length > 0) {
             rawFreq = this.getSnappedFrequency(rawFreq);
         }
@@ -338,8 +342,40 @@ class AudioEngine {
         Tone.Destination.volume.rampTo(volumeDb, 0.1);
     }
 
-    setAttack(value) { this.attackTime = value; }
-    setRelease(value) { this.releaseTime = value; }
+    /**
+     * Updates an envelope property across all active synths.
+     */
+    updateEnvelopeProperty(property, value) {
+        const updateSynth = (synth) => {
+            if (!synth) return;
+            if (synth.voice0 && synth.voice1) {
+                if (synth.voice0.envelope) synth.voice0.envelope[property] = value;
+                if (synth.voice1.envelope) synth.voice1.envelope[property] = value;
+            } else if (synth.envelope) {
+                synth.envelope[property] = value;
+            }
+        };
+        updateSynth(this.instrument);
+        if (this.previewLoop) updateSynth(this.previewLoop.synth);
+        this.savedLoops.forEach(loop => updateSynth(loop.synth));
+    }
+
+    setAttack(value) {
+        this.attackTime = value;
+        this.updateEnvelopeProperty('attack', value);
+    }
+    setDecay(value) {
+        this.decayTime = value;
+        this.updateEnvelopeProperty('decay', value);
+    }
+    setSustain(value) {
+        this.sustainLevel = value;
+        this.updateEnvelopeProperty('sustain', value);
+    }
+    setRelease(value) {
+        this.releaseTime = value;
+        this.updateEnvelopeProperty('release', value);
+    }
     setDelayWet(value) {
         this.delayWet = value;
         if (this.delayNode) this.delayNode.wet.rampTo(this.delayWet, 0.1);
@@ -354,9 +390,24 @@ class AudioEngine {
     }
     async setReverbDecay(value) {
         this.reverbDecay = value;
-        if (this.reverbNode) {
+        if (!this.reverbNode) return;
+        if (this._generatingReverb) {
+            this._pendingReverbDecay = value;
+            return;
+        }
+        this._generatingReverb = true;
+        try {
             this.reverbNode.decay = value;
             await this.reverbNode.generate();
+        } catch (e) {
+            console.error("Error generating reverb:", e);
+        } finally {
+            this._generatingReverb = false;
+            if (this._pendingReverbDecay !== null) {
+                const nextDecay = this._pendingReverbDecay;
+                this._pendingReverbDecay = null;
+                await this.setReverbDecay(nextDecay);
+            }
         }
     }
     updateWaveform(waveform) {
