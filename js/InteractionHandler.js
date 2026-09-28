@@ -173,6 +173,9 @@ class InteractionHandler {
             if (startOverlay && startOverlay.style.display !== 'none') {
                 return;
             }
+            if (e.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
+                return;
+            }
             if (e.key.toLowerCase() === "m") {
                 this.showSettings();
             } else if (e.key === "Escape") {
@@ -217,6 +220,8 @@ class InteractionHandler {
         const releaseSlider = document.getElementById('releaseSlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
         const delayTimeSelect = document.getElementById('delayTimeSelect');
+        const filterCutoffSlider = document.getElementById('filterCutoffSlider');
+        const filterQSlider = document.getElementById('filterQSlider');
         const reverbWetSlider = document.getElementById('reverbWetSlider');
         const reverbDecaySlider = document.getElementById('reverbDecaySlider');
         const visModeSelect = document.getElementById('visModeSelect');
@@ -236,6 +241,12 @@ class InteractionHandler {
         delayWetSlider.addEventListener('input', (e) => this.audioEngine.setDelayWet(parseFloat(e.target.value)));
         if (delayTimeSelect) {
             delayTimeSelect.addEventListener('change', (e) => this.audioEngine.setDelayTime(e.target.value));
+        }
+        if (filterCutoffSlider) {
+            filterCutoffSlider.addEventListener('input', (e) => this.audioEngine.setFilterCutoff(parseFloat(e.target.value)));
+        }
+        if (filterQSlider) {
+            filterQSlider.addEventListener('input', (e) => this.audioEngine.setFilterQ(parseFloat(e.target.value)));
         }
         if (reverbWetSlider) {
             reverbWetSlider.addEventListener('input', (e) => this.audioEngine.setReverbWet(parseFloat(e.target.value)));

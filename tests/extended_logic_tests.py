@@ -70,6 +70,11 @@ def test_extended_js_logic():
         print("Missing unconditional wake lock re-acquisition check on visible state")
         return False
 
+    # Check for frequency clamping
+    if 'Math.max(50, rawFreq)' not in content:
+        print("Missing frequency clamping to minimum 50 Hz")
+        return False
+
     return True
 
 if __name__ == "__main__":
