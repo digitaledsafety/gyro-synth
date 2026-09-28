@@ -51,6 +51,11 @@ def test_js_logic_integrity():
         print("Missing frequencyDisplay")
         return False
 
+    # Check for Filter node
+    if 'this.filterNode' not in content:
+        print("Missing filterNode")
+        return False
+
     return True
 
 if __name__ == "__main__":

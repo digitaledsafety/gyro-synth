@@ -45,6 +45,8 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#clearAllBtn')).toBeVisible();
 
     // Check new parameters/controls
+    await expect(page.locator('#filterCutoffSlider')).toBeVisible();
+    await expect(page.locator('#filterQSlider')).toBeVisible();
     await expect(page.locator('#reverbWetSlider')).toBeVisible();
     await expect(page.locator('#reverbDecaySlider')).toBeVisible();
     await expect(page.locator('#delayTimeSelect')).toBeVisible();
@@ -124,10 +126,34 @@ test.describe('Gyro Synth Frontend Tests', () => {
     // Check slider labels
     await expect(page.locator('#attackSlider')).toHaveAttribute('aria-label', 'Synth Attack Time');
     await expect(page.locator('#releaseSlider')).toHaveAttribute('aria-label', 'Synth Release Time');
+    await expect(page.locator('#filterCutoffSlider')).toHaveAttribute('aria-label', 'Filter Cutoff Frequency');
+    await expect(page.locator('#filterQSlider')).toHaveAttribute('aria-label', 'Filter Resonance');
     await expect(page.locator('#reverbWetSlider')).toHaveAttribute('aria-label', 'Reverb Wet Level');
     await expect(page.locator('#reverbDecaySlider')).toHaveAttribute('aria-label', 'Reverb Decay Time');
     await expect(page.locator('#delayWetSlider')).toHaveAttribute('aria-label', 'Delay Wet Level');
     await expect(page.locator('#volumeSlider')).toHaveAttribute('aria-label', 'Master Volume Level');
+  });
+
+  test('should ignore keydown "m" or "Escape" when focused on interactive form inputs', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Open settings modal
+    await page.keyboard.press('m');
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+
+    // Focus on an input inside modal
+    const attackSlider = page.locator('#attackSlider');
+    await attackSlider.focus();
+
+    // Press Escape while focused on the input - should be ignored by modal shortcut handler
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeVisible();
+
+    // Unfocus by clicking close button or pressing Escape outside input
+    await page.locator('#closeSettingsBtn').click();
+    await expect(modal).toBeHidden();
   });
 
   test('should not show settings modal on keypress "m" when start overlay is active', async ({ page }) => {
