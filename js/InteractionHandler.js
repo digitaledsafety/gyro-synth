@@ -58,6 +58,11 @@ class InteractionHandler {
                 this.updateVirtualOrientation(event.clientX, event.clientY);
             }
 
+            if (this.pressTimers.has(event.pointerId)) {
+                clearTimeout(this.pressTimers.get(event.pointerId));
+                this.pressTimers.delete(event.pointerId);
+            }
+
             const timer = setTimeout(() => {
                 if (this.isLongPress) return;
                 this.isLongPress = true;
@@ -112,6 +117,9 @@ class InteractionHandler {
             if (timer) {
                 clearTimeout(timer);
                 this.pressTimers.delete(event.pointerId);
+            }
+            if (this.activePointers.size === 0) {
+                this.isLongPress = false;
             }
         });
     }
