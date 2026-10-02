@@ -48,6 +48,27 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#reverbWetSlider')).toBeVisible();
     await expect(page.locator('#reverbDecaySlider')).toBeVisible();
     await expect(page.locator('#delayTimeSelect')).toBeVisible();
+    await expect(page.locator('#filterCutoffSlider')).toBeVisible();
+    await expect(page.locator('#filterQSlider')).toBeVisible();
+  });
+
+  test('should ignore "m" key shortcut when focus is inside a form control', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Open settings modal
+    await page.keyboard.press('m');
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+
+    // Focus on an input (e.g. filterCutoffSlider or volumeSlider)
+    const cutoffSlider = page.locator('#filterCutoffSlider');
+    await cutoffSlider.focus();
+
+    // Press 'm' key while focused on input
+    await page.keyboard.press('m');
+    // Modal should remain visible and not toggle off
+    await expect(modal).toBeVisible();
   });
 
   test('should display beta and gamma values', async ({ page }) => {
@@ -127,6 +148,8 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#reverbWetSlider')).toHaveAttribute('aria-label', 'Reverb Wet Level');
     await expect(page.locator('#reverbDecaySlider')).toHaveAttribute('aria-label', 'Reverb Decay Time');
     await expect(page.locator('#delayWetSlider')).toHaveAttribute('aria-label', 'Delay Wet Level');
+    await expect(page.locator('#filterCutoffSlider')).toHaveAttribute('aria-label', 'Filter Cutoff Frequency');
+    await expect(page.locator('#filterQSlider')).toHaveAttribute('aria-label', 'Filter Resonance Q');
     await expect(page.locator('#volumeSlider')).toHaveAttribute('aria-label', 'Master Volume Level');
   });
 
