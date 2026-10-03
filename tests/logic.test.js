@@ -19,6 +19,15 @@ function testSnapping(rawFreq, scaleFrequencies) {
     return closestFreq;
 }
 
+function calculateNormalizedFrequency(beta, maxFreq = 880, scaleFrequencies = []) {
+    let rawFreq = ((Math.sin(beta * (Math.PI / 180))) * maxFreq + maxFreq) / 2;
+    rawFreq = Math.max(50, rawFreq);
+    if (scaleFrequencies.length > 0) {
+        rawFreq = testSnapping(rawFreq, scaleFrequencies);
+    }
+    return rawFreq;
+}
+
 const scale = [100, 200, 300, 400];
 
 console.assert(testSnapping(105, scale) === 100, "Should snap 105 to 100");
@@ -27,4 +36,9 @@ console.assert(testSnapping(350, scale) === 300 || testSnapping(350, scale) === 
 console.assert(testSnapping(50, scale) === 100, "Should snap 50 to 100");
 console.assert(testSnapping(500, scale) === 400, "Should snap 500 to 400");
 
-console.log("Snapping logic tests passed!");
+// Clamping tests
+console.assert(calculateNormalizedFrequency(-90) === 50, "Should clamp minimum frequency to 50 Hz at beta -90");
+console.assert(calculateNormalizedFrequency(0) === 440, "Should calculate 440 Hz at beta 0");
+console.assert(calculateNormalizedFrequency(90) === 880, "Should calculate 880 Hz at beta 90");
+
+console.log("Snapping and frequency calculation logic tests passed!");
