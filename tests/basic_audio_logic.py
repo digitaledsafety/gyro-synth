@@ -15,9 +15,15 @@ def test_js_logic_integrity():
         print("Missing previewLoop.dispose();")
         return False
 
-    # Check for FeedbackDelay
+    # Check for FeedbackDelay and Filter
     if 'new Tone.FeedbackDelay' not in content:
         print("Missing Tone.FeedbackDelay")
+        return False
+    if 'setFilterCutoff' not in content:
+        print("Missing setFilterCutoff method")
+        return False
+    if 'setFilterQ' not in content:
+        print("Missing setFilterQ method")
         return False
 
     # Check for attack and release variables/properties
