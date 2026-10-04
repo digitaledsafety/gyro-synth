@@ -48,6 +48,8 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#reverbWetSlider')).toBeVisible();
     await expect(page.locator('#reverbDecaySlider')).toBeVisible();
     await expect(page.locator('#delayTimeSelect')).toBeVisible();
+    await expect(page.locator('#filterCutoffSlider')).toBeVisible();
+    await expect(page.locator('#filterQSlider')).toBeVisible();
   });
 
   test('should display beta and gamma values', async ({ page }) => {
@@ -127,6 +129,8 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#reverbWetSlider')).toHaveAttribute('aria-label', 'Reverb Wet Level');
     await expect(page.locator('#reverbDecaySlider')).toHaveAttribute('aria-label', 'Reverb Decay Time');
     await expect(page.locator('#delayWetSlider')).toHaveAttribute('aria-label', 'Delay Wet Level');
+    await expect(page.locator('#filterCutoffSlider')).toHaveAttribute('aria-label', 'Filter Cutoff Frequency');
+    await expect(page.locator('#filterQSlider')).toHaveAttribute('aria-label', 'Filter Resonance');
     await expect(page.locator('#volumeSlider')).toHaveAttribute('aria-label', 'Master Volume Level');
   });
 
@@ -135,5 +139,24 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await page.keyboard.press('m');
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
+  });
+
+  test('should ignore "m" shortcut when an input control is focused', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Open settings modal
+    await page.keyboard.press('m');
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+
+    // Focus an input element inside modal
+    await page.locator('#attackSlider').focus();
+
+    // Press 'm' while focused on input element
+    await page.keyboard.press('m');
+
+    // Modal should remain visible
+    await expect(modal).toBeVisible();
   });
 });

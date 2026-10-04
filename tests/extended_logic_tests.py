@@ -70,6 +70,11 @@ def test_extended_js_logic():
         print("Missing unconditional wake lock re-acquisition check on visible state")
         return False
 
+    # Check for form input tag isolation in keyboard shortcuts
+    if "['INPUT', 'SELECT', 'TEXTAREA'].includes(activeElement.tagName)" not in content:
+        print("Missing form input tag check in setupKeyboardEvents")
+        return False
+
     return True
 
 if __name__ == "__main__":
