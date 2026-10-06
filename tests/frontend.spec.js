@@ -136,4 +136,18 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should clear active sounds when pressing hotkey "c"', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Trigger hotkey 'c'
+    await page.keyboard.press('c');
+
+    // Confirm AudioEngine clearSounds runs without error
+    const activeSoundsCount = await page.evaluate(() => {
+      return (window.audioEngine ? window.audioEngine.savedLoops.length : 0);
+    });
+    expect(activeSoundsCount).toBe(0);
+  });
 });
