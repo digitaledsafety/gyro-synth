@@ -27,4 +27,15 @@ console.assert(testSnapping(350, scale) === 300 || testSnapping(350, scale) === 
 console.assert(testSnapping(50, scale) === 100, "Should snap 50 to 100");
 console.assert(testSnapping(500, scale) === 400, "Should snap 500 to 400");
 
+function testNormalizedFrequency(beta, maxFreq = 880, scaleFrequencies = []) {
+    let rawFreq = ((Math.sin(beta * (Math.PI / 180))) * maxFreq + maxFreq) / 2;
+    rawFreq = Math.max(50, rawFreq);
+    if (scaleFrequencies.length > 0) {
+        rawFreq = testSnapping(rawFreq, scaleFrequencies);
+    }
+    return Math.max(50, rawFreq);
+}
+
+console.assert(testNormalizedFrequency(-90) === 50, "Should clamp raw frequency to 50 Hz at beta -90");
+
 console.log("Snapping logic tests passed!");

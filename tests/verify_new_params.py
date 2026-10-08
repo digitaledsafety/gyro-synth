@@ -15,6 +15,8 @@ def test_new_params_and_ui():
     # Check for new UI elements in index.html
     new_ui_elements = [
         'id="attackSlider"',
+        'id="decaySlider"',
+        'id="sustainSlider"',
         'id="releaseSlider"',
         'id="delayWetSlider"',
         'id="synthTypeSelect"'
@@ -27,6 +29,8 @@ def test_new_params_and_ui():
     # Check for event listeners in JS files
     listeners = [
         'attackSlider.addEventListener',
+        'decaySlider.addEventListener',
+        'sustainSlider.addEventListener',
         'releaseSlider.addEventListener',
         'delayWetSlider.addEventListener'
     ]
@@ -38,6 +42,11 @@ def test_new_params_and_ui():
     # Check for Ripple call in pointerdown (it's now in InteractionHandler.js calling visualizer.createRipple)
     if 'this.visualizer.createRipple(event.clientX, event.clientY)' not in js_content:
         print("Missing createRipple call in pointerdown")
+        return False
+
+    # Check for updateEnvelopeProperty in AudioEngine.js
+    if 'updateEnvelopeProperty' not in js_content:
+        print("Missing updateEnvelopeProperty in AudioEngine")
         return False
 
     return True

@@ -70,6 +70,11 @@ def test_extended_js_logic():
         print("Missing unconditional wake lock re-acquisition check on visible state")
         return False
 
+    # Check for 'c' shortcut key to clear sounds
+    if 'e.key.toLowerCase() === "c"' not in content:
+        print("Missing 'c' keyboard shortcut for clearSounds")
+        return False
+
     return True
 
 if __name__ == "__main__":
