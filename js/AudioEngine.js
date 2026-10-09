@@ -14,6 +14,8 @@ class AudioEngine {
         this.fftAnalyzer = null; // Tone.FFT analyzer
 
         this.attackTime = 0.1;
+        this.decayTime = 0.2;
+        this.sustainLevel = 0.5;
         this.releaseTime = 0.5;
         this.delayWet = 0.3;
         this.userVolume = 0.8;
@@ -120,12 +122,16 @@ class AudioEngine {
         const selectedWaveform = waveform || this.waveform || (document.getElementById('waveformSelect') ? document.getElementById('waveformSelect').value : 'sine');
         const selectedSynthType = synthType || this.synthType || (document.getElementById('synthTypeSelect') ? document.getElementById('synthTypeSelect').value : 'FMSynth');
 
+        const envSettings = {
+            attack: this.attackTime,
+            decay: this.decayTime,
+            sustain: this.sustainLevel,
+            release: this.releaseTime
+        };
+
         const settings = {
             oscillator: { type: selectedWaveform },
-            envelope: {
-                attack: this.attackTime,
-                release: this.releaseTime
-            }
+            envelope: envSettings
         };
 
         let synth;
@@ -137,17 +143,11 @@ class AudioEngine {
                 const duoSettings = {
                     voice0: {
                         oscillator: { type: selectedWaveform },
-                        envelope: {
-                            attack: this.attackTime,
-                            release: this.releaseTime
-                        }
+                        envelope: envSettings
                     },
                     voice1: {
                         oscillator: { type: selectedWaveform },
-                        envelope: {
-                            attack: this.attackTime,
-                            release: this.releaseTime
-                        }
+                        envelope: envSettings
                     }
                 };
                 synth = new Tone.DuoSynth(duoSettings);
@@ -338,8 +338,37 @@ class AudioEngine {
         Tone.Destination.volume.rampTo(volumeDb, 0.1);
     }
 
-    setAttack(value) { this.attackTime = value; }
-    setRelease(value) { this.releaseTime = value; }
+    updateEnvelopeProperty(property, value) {
+        const updateSynthEnv = (synth) => {
+            if (!synth) return;
+            if (synth.voice0 && synth.voice1) {
+                if (synth.voice0.envelope) synth.voice0.envelope[property] = value;
+                if (synth.voice1.envelope) synth.voice1.envelope[property] = value;
+            } else if (synth.envelope) {
+                synth.envelope[property] = value;
+            }
+        };
+        updateSynthEnv(this.instrument);
+        if (this.previewLoop) updateSynthEnv(this.previewLoop.synth);
+        this.savedLoops.forEach(loop => updateSynthEnv(loop.synth));
+    }
+
+    setAttack(value) {
+        this.attackTime = value;
+        this.updateEnvelopeProperty('attack', value);
+    }
+    setDecay(value) {
+        this.decayTime = value;
+        this.updateEnvelopeProperty('decay', value);
+    }
+    setSustain(value) {
+        this.sustainLevel = value;
+        this.updateEnvelopeProperty('sustain', value);
+    }
+    setRelease(value) {
+        this.releaseTime = value;
+        this.updateEnvelopeProperty('release', value);
+    }
     setDelayWet(value) {
         this.delayWet = value;
         if (this.delayNode) this.delayNode.wet.rampTo(this.delayWet, 0.1);
