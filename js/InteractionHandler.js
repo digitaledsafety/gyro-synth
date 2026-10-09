@@ -169,14 +169,30 @@ class InteractionHandler {
     setupKeyboardEvents() {
         window.addEventListener("keydown", (e) => {
             const startOverlay = document.getElementById('startOverlay');
-            // If the start overlay is still active / visible, ignore 'm' or escape keys
+            // If the start overlay is still active / visible, ignore key shortcuts
             if (startOverlay && startOverlay.style.display !== 'none') {
                 return;
             }
-            if (e.key.toLowerCase() === "m") {
+
+            // If target is an input or select, don't trigger global hotkeys except Escape
+            const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+            if (activeTag === 'input' || activeTag === 'select' || activeTag === 'textarea') {
+                if (e.key === "Escape") {
+                    this.hideSettings();
+                }
+                return;
+            }
+
+            const key = e.key.toLowerCase();
+            if (key === "m" || key === "s") {
                 this.showSettings();
-            } else if (e.key === "Escape") {
+            } else if (e.key === "Escape" || key === "escape") {
                 this.hideSettings();
+            } else if (key === "c") {
+                this.audioEngine.clearSounds();
+            } else if (e.code === "Space" || key === " ") {
+                e.preventDefault();
+                this.audioEngine.toggleContinuousNote();
             }
         });
     }
@@ -214,6 +230,8 @@ class InteractionHandler {
         const waveformSelect = document.getElementById('waveformSelect');
         const volumeSlider = document.getElementById('volumeSlider');
         const attackSlider = document.getElementById('attackSlider');
+        const decaySlider = document.getElementById('decaySlider');
+        const sustainSlider = document.getElementById('sustainSlider');
         const releaseSlider = document.getElementById('releaseSlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
         const delayTimeSelect = document.getElementById('delayTimeSelect');
@@ -232,6 +250,12 @@ class InteractionHandler {
         waveformSelect.addEventListener('change', (e) => this.audioEngine.updateWaveform(e.target.value));
         volumeSlider.addEventListener('input', (e) => this.audioEngine.setUserVolume(parseFloat(e.target.value)));
         attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
+        if (decaySlider) {
+            decaySlider.addEventListener('input', (e) => this.audioEngine.setDecay(parseFloat(e.target.value)));
+        }
+        if (sustainSlider) {
+            sustainSlider.addEventListener('input', (e) => this.audioEngine.setSustain(parseFloat(e.target.value)));
+        }
         releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
         delayWetSlider.addEventListener('input', (e) => this.audioEngine.setDelayWet(parseFloat(e.target.value)));
         if (delayTimeSelect) {
@@ -248,14 +272,17 @@ class InteractionHandler {
 
     showSettings() {
         const modal = document.getElementById('settingsModal');
+        if (this.settingsTimeout) clearTimeout(this.settingsTimeout);
         modal.style.display = "flex";
-        setTimeout(() => modal.classList.add('visible'), 10);
+        void modal.offsetWidth;
+        modal.classList.add('visible');
     }
 
     hideSettings() {
         const modal = document.getElementById('settingsModal');
+        if (this.settingsTimeout) clearTimeout(this.settingsTimeout);
         modal.classList.remove('visible');
-        setTimeout(() => {
+        this.settingsTimeout = setTimeout(() => {
             if (!modal.classList.contains('visible')) {
                 modal.style.display = "none";
             }

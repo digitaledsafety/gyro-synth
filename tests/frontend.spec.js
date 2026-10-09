@@ -123,6 +123,8 @@ test.describe('Gyro Synth Frontend Tests', () => {
 
     // Check slider labels
     await expect(page.locator('#attackSlider')).toHaveAttribute('aria-label', 'Synth Attack Time');
+    await expect(page.locator('#decaySlider')).toHaveAttribute('aria-label', 'Synth Decay Time');
+    await expect(page.locator('#sustainSlider')).toHaveAttribute('aria-label', 'Synth Sustain Level');
     await expect(page.locator('#releaseSlider')).toHaveAttribute('aria-label', 'Synth Release Time');
     await expect(page.locator('#reverbWetSlider')).toHaveAttribute('aria-label', 'Reverb Wet Level');
     await expect(page.locator('#reverbDecaySlider')).toHaveAttribute('aria-label', 'Reverb Decay Time');
@@ -134,6 +136,20 @@ test.describe('Gyro Synth Frontend Tests', () => {
     // On load, modal should be hidden even if 'm' key is pressed
     await page.keyboard.press('m');
     const modal = page.locator('#settingsModal');
+    await expect(modal).toBeHidden();
+  });
+
+  test('should respond to new keyboard shortcuts "s" and "c"', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Key 's' should open settings
+    await page.keyboard.press('s');
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+
+    // Escape to close
+    await page.keyboard.press('Escape');
     await expect(modal).toBeHidden();
   });
 });
