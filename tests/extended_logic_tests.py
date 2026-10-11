@@ -70,6 +70,16 @@ def test_extended_js_logic():
         print("Missing unconditional wake lock re-acquisition check on visible state")
         return False
 
+    # Check for updateEnvelopeProperty helper
+    if 'updateEnvelopeProperty' not in content:
+        print("Missing updateEnvelopeProperty function")
+        return False
+
+    # Check for form input suppression in keydown handler
+    if "['INPUT', 'SELECT', 'TEXTAREA'].includes" not in content:
+        print("Missing form input suppression in keyboard handler")
+        return False
+
     return True
 
 if __name__ == "__main__":
