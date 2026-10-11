@@ -169,14 +169,32 @@ class InteractionHandler {
     setupKeyboardEvents() {
         window.addEventListener("keydown", (e) => {
             const startOverlay = document.getElementById('startOverlay');
-            // If the start overlay is still active / visible, ignore 'm' or escape keys
+            // If the start overlay is still active / visible, ignore hotkeys
             if (startOverlay && startOverlay.style.display !== 'none') {
                 return;
             }
-            if (e.key.toLowerCase() === "m") {
-                this.showSettings();
-            } else if (e.key === "Escape") {
+
+            if (e.key === "Escape") {
                 this.hideSettings();
+                if (e.target && typeof e.target.blur === 'function') {
+                    e.target.blur();
+                }
+                return;
+            }
+
+            // Suppress hotkeys when typing into form elements
+            if (e.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
+                return;
+            }
+
+            const key = e.key.toLowerCase();
+            if (key === "m" || key === "s") {
+                this.showSettings();
+            } else if (key === "c") {
+                this.audioEngine.clearSounds();
+            } else if (e.key === " " || key === "spacebar") {
+                e.preventDefault();
+                this.audioEngine.toggleContinuousNote();
             }
         });
     }
@@ -248,17 +266,29 @@ class InteractionHandler {
 
     showSettings() {
         const modal = document.getElementById('settingsModal');
+        if (!modal) return;
+        if (this.settingsTimeout) {
+            clearTimeout(this.settingsTimeout);
+            this.settingsTimeout = null;
+        }
         modal.style.display = "flex";
-        setTimeout(() => modal.classList.add('visible'), 10);
+        void modal.offsetWidth; // Force CSS reflow
+        modal.classList.add('visible');
     }
 
     hideSettings() {
         const modal = document.getElementById('settingsModal');
+        if (!modal) return;
+        if (this.settingsTimeout) {
+            clearTimeout(this.settingsTimeout);
+            this.settingsTimeout = null;
+        }
         modal.classList.remove('visible');
-        setTimeout(() => {
+        this.settingsTimeout = setTimeout(() => {
             if (!modal.classList.contains('visible')) {
                 modal.style.display = "none";
             }
+            this.settingsTimeout = null;
         }, 300);
     }
 }
