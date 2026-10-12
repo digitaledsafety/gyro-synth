@@ -61,6 +61,11 @@ def test_extended_js_logic():
         print("Missing Tone.Panner initialization")
         return False
 
+    # Check for Filter
+    if 'this.filterNode = null;' not in content and 'filterNode' not in content:
+        print("Missing filterNode initialization")
+        return False
+
     # Check for wake lock re-acquisition logic on visibilitychange
     if 'visibilitychange' not in content:
         print("Missing visibilitychange event listener")
