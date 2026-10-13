@@ -113,6 +113,9 @@ class InteractionHandler {
                 clearTimeout(timer);
                 this.pressTimers.delete(event.pointerId);
             }
+            if (this.activePointers.size === 0) {
+                this.isLongPress = false;
+            }
         });
     }
 
@@ -169,14 +172,34 @@ class InteractionHandler {
     setupKeyboardEvents() {
         window.addEventListener("keydown", (e) => {
             const startOverlay = document.getElementById('startOverlay');
-            // If the start overlay is still active / visible, ignore 'm' or escape keys
+            // If the start overlay is still active / visible, ignore hotkeys
             if (startOverlay && startOverlay.style.display !== 'none') {
                 return;
             }
-            if (e.key.toLowerCase() === "m") {
-                this.showSettings();
-            } else if (e.key === "Escape") {
+
+            // Always allow Escape to close modal and blur active input
+            if (e.key === "Escape") {
+                if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                    document.activeElement.blur();
+                }
                 this.hideSettings();
+                return;
+            }
+
+            // Suppress shortcuts if user is currently typing in an input control
+            const activeTag = document.activeElement ? document.activeElement.tagName : '';
+            if (activeTag === 'INPUT' || activeTag === 'SELECT' || activeTag === 'TEXTAREA') {
+                return;
+            }
+
+            const key = e.key.toLowerCase();
+            if (key === "m" || key === "s") {
+                this.showSettings();
+            } else if (key === "c") {
+                this.audioEngine.clearSounds();
+            } else if (e.code === "Space" || key === " ") {
+                e.preventDefault();
+                this.audioEngine.toggleContinuousNote();
             }
         });
     }
