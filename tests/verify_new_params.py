@@ -17,7 +17,9 @@ def test_new_params_and_ui():
         'id="attackSlider"',
         'id="releaseSlider"',
         'id="delayWetSlider"',
-        'id="synthTypeSelect"'
+        'id="synthTypeSelect"',
+        'id="filterCutoffSlider"',
+        'id="filterQSlider"'
     ]
     for element in new_ui_elements:
         if element not in html_content:
@@ -28,16 +30,23 @@ def test_new_params_and_ui():
     listeners = [
         'attackSlider.addEventListener',
         'releaseSlider.addEventListener',
-        'delayWetSlider.addEventListener'
+        'delayWetSlider.addEventListener',
+        'filterCutoffSlider.addEventListener',
+        'filterQSlider.addEventListener'
     ]
     for listener in listeners:
         if listener not in js_content:
             print(f"Missing event listener: {listener}")
             return False
 
-    # Check for Ripple call in pointerdown (it's now in InteractionHandler.js calling visualizer.createRipple)
+    # Check for Ripple call in pointerdown
     if 'this.visualizer.createRipple(event.clientX, event.clientY)' not in js_content:
         print("Missing createRipple call in pointerdown")
+        return False
+
+    # Check for filter methods in AudioEngine
+    if 'setFilterCutoff' not in js_content or 'setFilterQ' not in js_content:
+        print("Missing setFilterCutoff or setFilterQ method")
         return False
 
     return True
