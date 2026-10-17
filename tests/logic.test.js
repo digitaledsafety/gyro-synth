@@ -27,4 +27,18 @@ console.assert(testSnapping(350, scale) === 300 || testSnapping(350, scale) === 
 console.assert(testSnapping(50, scale) === 100, "Should snap 50 to 100");
 console.assert(testSnapping(500, scale) === 400, "Should snap 500 to 400");
 
-console.log("Snapping logic tests passed!");
+function getNormalizedFrequency(beta, maxFreq = 880, scaleFrequencies = []) {
+    let rawFreq = ((Math.sin(beta * (Math.PI / 180))) * maxFreq + maxFreq) / 2;
+    rawFreq = Math.max(50, rawFreq);
+    if (scaleFrequencies.length > 0) {
+        rawFreq = testSnapping(rawFreq, scaleFrequencies);
+    }
+    return rawFreq;
+}
+
+// Test frequency floor capping at 50 Hz when beta is -90 deg
+console.assert(getNormalizedFrequency(-90) === 50, "At -90 degrees beta, frequency should cap at minimum 50 Hz");
+console.assert(getNormalizedFrequency(0) === 440, "At 0 degrees beta, frequency should be 440 Hz");
+console.assert(getNormalizedFrequency(90) === 880, "At 90 degrees beta, frequency should be 880 Hz");
+
+console.log("Snapping and frequency capping logic tests passed!");
