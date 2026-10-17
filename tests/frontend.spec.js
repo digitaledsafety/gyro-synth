@@ -136,4 +136,22 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should open settings modal using "s" key and handle escape while focused on select', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Open settings with 's' key
+    await page.keyboard.press('s');
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+
+    // Focus on a select element inside modal
+    const scaleSelect = page.locator('#scaleSelect');
+    await scaleSelect.focus();
+
+    // Press Escape to close modal and blur field
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+  });
 });

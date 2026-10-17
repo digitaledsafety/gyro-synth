@@ -189,6 +189,7 @@ class AudioEngine {
      */
     getNormalizedFrequency() {
         let rawFreq = ((Math.sin(this.beta * (Math.PI / 180))) * this.maxFrequency + this.maxFrequency) / 2;
+        rawFreq = Math.max(50, rawFreq);
         if (this.currentScaleConfig && this.currentScaleConfig.intervals && this.generatedScaleFrequencies.length > 0) {
             rawFreq = this.getSnappedFrequency(rawFreq);
         }
@@ -338,8 +339,29 @@ class AudioEngine {
         Tone.Destination.volume.rampTo(volumeDb, 0.1);
     }
 
-    setAttack(value) { this.attackTime = value; }
-    setRelease(value) { this.releaseTime = value; }
+    updateEnvelopeProperty(property, value) {
+        const applyToSynth = (synth) => {
+            if (!synth) return;
+            if (synth.voice0 && synth.voice1) {
+                if (synth.voice0.envelope) synth.voice0.envelope[property] = value;
+                if (synth.voice1.envelope) synth.voice1.envelope[property] = value;
+            } else if (synth.envelope) {
+                synth.envelope[property] = value;
+            }
+        };
+        applyToSynth(this.instrument);
+        if (this.previewLoop) applyToSynth(this.previewLoop.synth);
+        this.savedLoops.forEach(loop => applyToSynth(loop.synth));
+    }
+
+    setAttack(value) {
+        this.attackTime = value;
+        this.updateEnvelopeProperty('attack', value);
+    }
+    setRelease(value) {
+        this.releaseTime = value;
+        this.updateEnvelopeProperty('release', value);
+    }
     setDelayWet(value) {
         this.delayWet = value;
         if (this.delayNode) this.delayNode.wet.rampTo(this.delayWet, 0.1);
@@ -355,8 +377,24 @@ class AudioEngine {
     async setReverbDecay(value) {
         this.reverbDecay = value;
         if (this.reverbNode) {
-            this.reverbNode.decay = value;
-            await this.reverbNode.generate();
+            if (this._generatingReverb) {
+                this._pendingReverbDecay = value;
+                return;
+            }
+            this._generatingReverb = true;
+            try {
+                this.reverbNode.decay = value;
+                await this.reverbNode.generate();
+            } finally {
+                this._generatingReverb = false;
+                if (this._pendingReverbDecay !== undefined && this._pendingReverbDecay !== value) {
+                    const nextVal = this._pendingReverbDecay;
+                    this._pendingReverbDecay = undefined;
+                    await this.setReverbDecay(nextVal);
+                } else {
+                    this._pendingReverbDecay = undefined;
+                }
+            }
         }
     }
     updateWaveform(waveform) {
