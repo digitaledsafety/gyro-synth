@@ -51,6 +51,11 @@ class InteractionHandler {
             if (this.activePointers.size === 1) {
                 this.isLongPress = false;
             }
+
+            // Clear existing timers to prevent multiple asynchronous triggers during multi-touch
+            this.pressTimers.forEach(t => clearTimeout(t));
+            this.pressTimers.clear();
+
             this.visualizer.createRipple(event.clientX, event.clientY);
 
             // Handle virtual orientation fallback if real orientation isn't present
@@ -113,6 +118,9 @@ class InteractionHandler {
                 clearTimeout(timer);
                 this.pressTimers.delete(event.pointerId);
             }
+            if (this.activePointers.size === 0) {
+                this.isLongPress = false;
+            }
         });
     }
 
@@ -169,14 +177,32 @@ class InteractionHandler {
     setupKeyboardEvents() {
         window.addEventListener("keydown", (e) => {
             const startOverlay = document.getElementById('startOverlay');
-            // If the start overlay is still active / visible, ignore 'm' or escape keys
+            // If the start overlay is still active / visible, ignore hotkeys
             if (startOverlay && startOverlay.style.display !== 'none') {
                 return;
             }
-            if (e.key.toLowerCase() === "m") {
-                this.showSettings();
-            } else if (e.key === "Escape") {
+
+            if (e.key === "Escape") {
                 this.hideSettings();
+                if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                    document.activeElement.blur();
+                }
+                return;
+            }
+
+            // Suppress hotkeys when form input controls are actively focused
+            if (e.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
+                return;
+            }
+
+            const key = e.key.toLowerCase();
+            if (key === "m" || key === "s") {
+                this.showSettings();
+            } else if (key === "c") {
+                this.audioEngine.clearSounds();
+            } else if (e.key === " ") {
+                e.preventDefault();
+                this.audioEngine.toggleContinuousNote();
             }
         });
     }
