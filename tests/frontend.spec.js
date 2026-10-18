@@ -136,4 +136,20 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should toggle settings modal using "s" key and close using "Escape" key', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeHidden();
+
+    // Press 's' to show modal
+    await page.keyboard.press('s');
+    await expect(modal).toBeVisible();
+
+    // Press 'Escape' to close modal
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+  });
 });
