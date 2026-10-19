@@ -169,14 +169,29 @@ class InteractionHandler {
     setupKeyboardEvents() {
         window.addEventListener("keydown", (e) => {
             const startOverlay = document.getElementById('startOverlay');
-            // If the start overlay is still active / visible, ignore 'm' or escape keys
+            // If the start overlay is still active / visible, ignore hotkeys
             if (startOverlay && startOverlay.style.display !== 'none') {
                 return;
             }
+
+            if (e.key === "Escape") {
+                if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                    document.activeElement.blur();
+                }
+                this.hideSettings();
+                return;
+            }
+
+            // Suppress global hotkeys when focused inside text/select/range input controls
+            const activeTag = document.activeElement ? document.activeElement.tagName : '';
+            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(activeTag)) {
+                return;
+            }
+
             if (e.key.toLowerCase() === "m") {
                 this.showSettings();
-            } else if (e.key === "Escape") {
-                this.hideSettings();
+            } else if (e.key.toLowerCase() === "c") {
+                this.audioEngine.clearSounds();
             }
         });
     }
