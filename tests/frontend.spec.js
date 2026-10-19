@@ -136,4 +136,25 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should suppress hotkeys when form control is focused', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Open settings modal using 'm'
+    await page.keyboard.press('m');
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+
+    // Focus on an input inside settings
+    await page.locator('#attackSlider').focus();
+
+    // Pressing 'm' while slider/input is focused should NOT close modal or toggle hotkeys
+    await page.keyboard.press('m');
+    await expect(modal).toBeVisible();
+
+    // Pressing Escape should blur input and hide settings modal
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+  });
 });

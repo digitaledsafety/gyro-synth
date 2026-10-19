@@ -70,6 +70,16 @@ def test_extended_js_logic():
         print("Missing unconditional wake lock re-acquisition check on visible state")
         return False
 
+    # Check for updateEnvelopeProperty helper in AudioEngine
+    if 'updateEnvelopeProperty(' not in content:
+        print("Missing updateEnvelopeProperty function in AudioEngine")
+        return False
+
+    # Check for keyboard clear shortcut
+    if 'e.key.toLowerCase() === "c"' not in content:
+        print("Missing keypress 'c' sound clear shortcut handler")
+        return False
+
     return True
 
 if __name__ == "__main__":
