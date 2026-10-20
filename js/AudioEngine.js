@@ -25,6 +25,8 @@ class AudioEngine {
         this.reverbDecay = 2.0;
         this.delayTime = '8n';
         this.reverbNode = null;
+        this._generatingReverb = false;
+        this._pendingReverbDecay = null;
 
         this.currentScaleConfig = null;
         this.generatedScaleFrequencies = [];
@@ -47,6 +49,14 @@ class AudioEngine {
             'Aeolian': { intervals: [0, 2, 3, 5, 7, 8, 10] },
             'Locrian': { intervals: [0, 1, 3, 5, 6, 8, 10] }
         };
+    }
+
+    /**
+     * Initializes audio graph if not already initialized (idempotent).
+     */
+    async startSounds() {
+        if (this.masterBus) return;
+        await this.init();
     }
 
     /**
@@ -354,10 +364,28 @@ class AudioEngine {
     }
     async setReverbDecay(value) {
         this.reverbDecay = value;
-        if (this.reverbNode) {
-            this.reverbNode.decay = value;
-            await this.reverbNode.generate();
+        if (!this.reverbNode) return;
+
+        if (this._generatingReverb) {
+            this._pendingReverbDecay = value;
+            return;
         }
+
+        this._generatingReverb = true;
+        let nextDecay = value;
+
+        while (nextDecay !== null) {
+            this.reverbNode.decay = nextDecay;
+            await this.reverbNode.generate();
+            if (this._pendingReverbDecay !== null) {
+                nextDecay = this._pendingReverbDecay;
+                this._pendingReverbDecay = null;
+            } else {
+                nextDecay = null;
+            }
+        }
+
+        this._generatingReverb = false;
     }
     updateWaveform(waveform) {
         this.waveform = waveform;
