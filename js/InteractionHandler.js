@@ -58,6 +58,10 @@ class InteractionHandler {
                 this.updateVirtualOrientation(event.clientX, event.clientY);
             }
 
+            // Clear any existing press timers on pointerdown for robust multi-touch long press detection
+            this.pressTimers.forEach(timer => clearTimeout(timer));
+            this.pressTimers.clear();
+
             const timer = setTimeout(() => {
                 if (this.isLongPress) return;
                 this.isLongPress = true;
