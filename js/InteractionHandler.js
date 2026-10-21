@@ -169,14 +169,31 @@ class InteractionHandler {
     setupKeyboardEvents() {
         window.addEventListener("keydown", (e) => {
             const startOverlay = document.getElementById('startOverlay');
-            // If the start overlay is still active / visible, ignore 'm' or escape keys
             if (startOverlay && startOverlay.style.display !== 'none') {
                 return;
             }
-            if (e.key.toLowerCase() === "m") {
-                this.showSettings();
-            } else if (e.key === "Escape") {
+
+            if (e.key === "Escape") {
                 this.hideSettings();
+                if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                    document.activeElement.blur();
+                }
+                return;
+            }
+
+            // Suppress other hotkeys when interactive form controls are actively focused
+            if (document.activeElement && ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                return;
+            }
+
+            const key = e.key.toLowerCase();
+            if (key === 'm' || key === 's') {
+                this.showSettings();
+            } else if (key === 'c') {
+                this.audioEngine.clearSounds();
+            } else if (e.key === ' ' || e.code === 'Space') {
+                e.preventDefault();
+                this.audioEngine.toggleContinuousNote();
             }
         });
     }
@@ -214,6 +231,8 @@ class InteractionHandler {
         const waveformSelect = document.getElementById('waveformSelect');
         const volumeSlider = document.getElementById('volumeSlider');
         const attackSlider = document.getElementById('attackSlider');
+        const decaySlider = document.getElementById('decaySlider');
+        const sustainSlider = document.getElementById('sustainSlider');
         const releaseSlider = document.getElementById('releaseSlider');
         const delayWetSlider = document.getElementById('delayWetSlider');
         const delayTimeSelect = document.getElementById('delayTimeSelect');
@@ -230,9 +249,21 @@ class InteractionHandler {
         rootNoteSelect.addEventListener('change', updateScaleSettings);
         synthTypeSelect.addEventListener('change', (e) => this.audioEngine.updateSynthType(e.target.value));
         waveformSelect.addEventListener('change', (e) => this.audioEngine.updateWaveform(e.target.value));
-        volumeSlider.addEventListener('input', (e) => this.audioEngine.setUserVolume(parseFloat(e.target.value)));
-        attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
-        releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
+        if (volumeSlider) {
+            volumeSlider.addEventListener('input', (e) => this.audioEngine.setUserVolume(parseFloat(e.target.value)));
+        }
+        if (attackSlider) {
+            attackSlider.addEventListener('input', (e) => this.audioEngine.setAttack(parseFloat(e.target.value)));
+        }
+        if (decaySlider) {
+            decaySlider.addEventListener('input', (e) => this.audioEngine.setDecay(parseFloat(e.target.value)));
+        }
+        if (sustainSlider) {
+            sustainSlider.addEventListener('input', (e) => this.audioEngine.setSustain(parseFloat(e.target.value)));
+        }
+        if (releaseSlider) {
+            releaseSlider.addEventListener('input', (e) => this.audioEngine.setRelease(parseFloat(e.target.value)));
+        }
         delayWetSlider.addEventListener('input', (e) => this.audioEngine.setDelayWet(parseFloat(e.target.value)));
         if (delayTimeSelect) {
             delayTimeSelect.addEventListener('change', (e) => this.audioEngine.setDelayTime(e.target.value));

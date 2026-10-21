@@ -70,6 +70,16 @@ def test_extended_js_logic():
         print("Missing unconditional wake lock re-acquisition check on visible state")
         return False
 
+    # Check for updateEnvelopeProperty helper
+    if 'updateEnvelopeProperty' not in content:
+        print("Missing updateEnvelopeProperty function")
+        return False
+
+    # Check for _generatingReverb concurrency protection
+    if '_generatingReverb' not in content:
+        print("Missing _generatingReverb concurrency lock")
+        return False
+
     return True
 
 if __name__ == "__main__":
