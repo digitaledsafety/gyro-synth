@@ -136,4 +136,45 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should support keyboard shortcuts "s", "Escape", "c", and "Space"', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    const modal = page.locator('#settingsModal');
+
+    // Press 's' to open settings modal
+    await page.keyboard.press('s');
+    await expect(modal).toBeVisible();
+
+    // Press 'Escape' to close settings modal
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+
+    // Press 'Space' to toggle continuous note without error
+    await page.keyboard.press('Space');
+
+    // Press 'c' to clear sounds without error
+    await page.keyboard.press('c');
+  });
+
+  test('should suppress hotkeys when form input controls are focused', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    await page.keyboard.press('m');
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+
+    // Focus on select input control
+    const rootSelect = page.locator('#rootNoteSelect');
+    await rootSelect.focus();
+
+    // Press 'c' while focused on select; should not trigger audio clear / throw error
+    await page.keyboard.press('c');
+
+    // Press 'Escape' while focused on input control; modal should close and blur focus
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+  });
 });
