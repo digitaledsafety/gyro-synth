@@ -28,3 +28,13 @@ console.assert(testSnapping(50, scale) === 100, "Should snap 50 to 100");
 console.assert(testSnapping(500, scale) === 400, "Should snap 500 to 400");
 
 console.log("Snapping logic tests passed!");
+
+// Test boundary mapping for pitch frequency clamping (not lower than 50Hz)
+function clampFrequency(freq) {
+    return freq < 50 ? 50 : freq;
+}
+
+console.assert(clampFrequency(30) === 50, "Should clamp frequencies under 50Hz to 50Hz");
+console.assert(clampFrequency(50) === 50, "Should retain 50Hz");
+console.assert(clampFrequency(100) === 100, "Should retain 100Hz");
+console.log("Clamping frequency logic tests passed!");
