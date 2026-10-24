@@ -25,6 +25,9 @@ class AudioEngine {
         this.reverbDecay = 2.0;
         this.delayTime = '8n';
         this.reverbNode = null;
+        this.filterNode = null;
+        this.filterCutoff = 20000;
+        this.filterQ = 1;
 
         this.currentScaleConfig = null;
         this.generatedScaleFrequencies = [];
@@ -70,8 +73,11 @@ class AudioEngine {
         this.delayNode = new Tone.FeedbackDelay(this.delayTime, 0.5);
         this.delayNode.wet.value = this.delayWet;
 
+        this.filterNode = new Tone.Filter(this.filterCutoff, "lowpass");
+        this.filterNode.Q.value = this.filterQ;
+
         this.panner = new Tone.Panner(0).toDestination();
-        this.masterBus.chain(lowBump, masterCompressor, this.delayNode, reverb, this.panner);
+        this.masterBus.chain(lowBump, masterCompressor, this.filterNode, this.delayNode, reverb, this.panner);
 
         this.waveformAnalyzer = new Tone.Waveform(1024);
         this.fftAnalyzer = new Tone.FFT(1024);
@@ -357,6 +363,18 @@ class AudioEngine {
         if (this.reverbNode) {
             this.reverbNode.decay = value;
             await this.reverbNode.generate();
+        }
+    }
+    setFilterCutoff(value) {
+        this.filterCutoff = value;
+        if (this.filterNode) {
+            this.filterNode.frequency.rampTo(this.filterCutoff, 0.1);
+        }
+    }
+    setFilterQ(value) {
+        this.filterQ = value;
+        if (this.filterNode) {
+            this.filterNode.Q.rampTo(this.filterQ, 0.1);
         }
     }
     updateWaveform(waveform) {
