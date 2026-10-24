@@ -27,4 +27,26 @@ console.assert(testSnapping(350, scale) === 300 || testSnapping(350, scale) === 
 console.assert(testSnapping(50, scale) === 100, "Should snap 50 to 100");
 console.assert(testSnapping(500, scale) === 400, "Should snap 500 to 400");
 
+// Test normalized frequency logic (including the 50 Hz cap logic)
+function getNormalizedFrequencyMock(beta, maxFrequency, scaleConfig, scaleFrequencies) {
+    let rawFreq = ((Math.sin(beta * (Math.PI / 180))) * maxFrequency + maxFrequency) / 2;
+    if (scaleConfig && scaleConfig.intervals && scaleFrequencies.length > 0) {
+        rawFreq = testSnapping(rawFreq, scaleFrequencies);
+    }
+    return Math.max(50, rawFreq);
+}
+
+// Test case where frequency is extremely low or negative, it should cap at 50
+const lowFreqValue = getNormalizedFrequencyMock(-90, 880, null, []);
+console.assert(lowFreqValue === 50, `Expected low frequency cap to be 50, but got ${lowFreqValue}`);
+
+// Test normal mapping without scale config
+const normalFreqValue = getNormalizedFrequencyMock(0, 880, null, []);
+console.assert(normalFreqValue === 440, `Expected normal mapped frequency to be 440, but got ${normalFreqValue}`);
+
+// Test with scale snapping configuration
+const scaleConfigMock = { intervals: [0, 2, 4, 7, 9] };
+const snappedLowFreqValue = getNormalizedFrequencyMock(-90, 880, scaleConfigMock, scale);
+console.assert(snappedLowFreqValue === 100, `Expected snapped frequency to snap to closest scale note (100), but got ${snappedLowFreqValue}`);
+
 console.log("Snapping logic tests passed!");

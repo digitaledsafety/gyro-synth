@@ -47,6 +47,10 @@ class InteractionHandler {
         const svg = this.visualizer.waveformSvg;
 
         svg.on("pointerdown", (event) => {
+            // Clear any existing press timers to prevent multiple asynchronous triggers on multi-touch
+            this.pressTimers.forEach((timer) => clearTimeout(timer));
+            this.pressTimers.clear();
+
             this.activePointers.add(event.pointerId);
             if (this.activePointers.size === 1) {
                 this.isLongPress = false;
@@ -112,6 +116,9 @@ class InteractionHandler {
             if (timer) {
                 clearTimeout(timer);
                 this.pressTimers.delete(event.pointerId);
+            }
+            if (this.activePointers.size === 0) {
+                this.isLongPress = false;
             }
         });
     }
