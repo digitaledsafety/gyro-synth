@@ -40,6 +40,14 @@ def test_new_params_and_ui():
         print("Missing createRipple call in pointerdown")
         return False
 
+    # Check for service-worker cache version v5
+    if os.path.exists('service-worker.js'):
+        with open('service-worker.js', 'r') as sw_file:
+            sw_content = sw_file.read()
+            if 'gyro-synth-cache-v5' not in sw_content:
+                print("Missing gyro-synth-cache-v5 in service-worker.js")
+                return False
+
     return True
 
 if __name__ == "__main__":
