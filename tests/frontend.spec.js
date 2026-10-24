@@ -123,10 +123,13 @@ test.describe('Gyro Synth Frontend Tests', () => {
 
     // Check slider labels
     await expect(page.locator('#attackSlider')).toHaveAttribute('aria-label', 'Synth Attack Time');
+    await expect(page.locator('#decaySlider')).toHaveAttribute('aria-label', 'Synth Decay Time');
+    await expect(page.locator('#sustainSlider')).toHaveAttribute('aria-label', 'Synth Sustain Level');
     await expect(page.locator('#releaseSlider')).toHaveAttribute('aria-label', 'Synth Release Time');
     await expect(page.locator('#reverbWetSlider')).toHaveAttribute('aria-label', 'Reverb Wet Level');
     await expect(page.locator('#reverbDecaySlider')).toHaveAttribute('aria-label', 'Reverb Decay Time');
     await expect(page.locator('#delayWetSlider')).toHaveAttribute('aria-label', 'Delay Wet Level');
+    await expect(page.locator('#delayFeedbackSlider')).toHaveAttribute('aria-label', 'Delay Feedback Level');
     await expect(page.locator('#volumeSlider')).toHaveAttribute('aria-label', 'Master Volume Level');
   });
 

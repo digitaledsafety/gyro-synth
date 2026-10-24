@@ -204,10 +204,21 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 gap-4 mb-3">
             <div>
               <label for="attackSlider" class="modal-label">Attack</label>
               <input type="range" id="attackSlider" aria-label="Synth Attack Time" min="0.01" max="2" step="0.01" value="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+            </div>
+            <div>
+              <label for="decaySlider" class="modal-label">Decay</label>
+              <input type="range" id="decaySlider" aria-label="Synth Decay Time" min="0.01" max="2" step="0.01" value="0.2" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="sustainSlider" class="modal-label">Sustain</label>
+              <input type="range" id="sustainSlider" aria-label="Synth Sustain Level" min="0" max="1" step="0.01" value="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
             </div>
             <div>
               <label for="releaseSlider" class="modal-label">Release</label>
@@ -231,20 +242,25 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 gap-4 mb-3">
             <div>
               <label for="delayWetSlider" class="modal-label">Delay Wet</label>
               <input type="range" id="delayWetSlider" aria-label="Delay Wet Level" min="0" max="1" step="0.01" value="0.3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
             </div>
             <div>
-              <label for="delayTimeSelect" class="modal-label">Delay Time</label>
-              <select id="delayTimeSelect" title="Select Delay Time" aria-label="Select Delay Time" class="mb-1">
-                <option value="2n">Half Note (2n)</option>
-                <option value="4n">Quarter Note (4n)</option>
-                <option value="8n" selected>Eighth Note (8n)</option>
-                <option value="16n">Sixteenth Note (16n)</option>
-              </select>
+              <label for="delayFeedbackSlider" class="modal-label">Delay Feedback</label>
+              <input type="range" id="delayFeedbackSlider" aria-label="Delay Feedback Level" min="0" max="0.95" step="0.01" value="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
             </div>
+          </div>
+
+          <div>
+            <label for="delayTimeSelect" class="modal-label">Delay Time</label>
+            <select id="delayTimeSelect" title="Select Delay Time" aria-label="Select Delay Time" class="mb-1">
+              <option value="2n">Half Note (2n)</option>
+              <option value="4n">Quarter Note (4n)</option>
+              <option value="8n" selected>Eighth Note (8n)</option>
+              <option value="16n">Sixteenth Note (16n)</option>
+            </select>
           </div>
         </div>
 

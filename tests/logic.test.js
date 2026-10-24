@@ -27,4 +27,13 @@ console.assert(testSnapping(350, scale) === 300 || testSnapping(350, scale) === 
 console.assert(testSnapping(50, scale) === 100, "Should snap 50 to 100");
 console.assert(testSnapping(500, scale) === 400, "Should snap 500 to 400");
 
+// Test pitch clamping logic: raw frequencies < 50 Hz must clamp to minimum 50 Hz
+function testFrequencyClamping(rawBeta, maxFrequency) {
+    let rawFreq = ((Math.sin(rawBeta * (Math.PI / 180))) * maxFrequency + maxFrequency) / 2;
+    return Math.max(50, rawFreq);
+}
+
+console.assert(testFrequencyClamping(-90, 880) === 50, "Pitch should clamp at 50 Hz threshold when beta is -90");
+console.assert(testFrequencyClamping(0, 880) === 440, "Pitch at beta 0 should be 440 Hz");
+
 console.log("Snapping logic tests passed!");
