@@ -47,6 +47,12 @@ class InteractionHandler {
         const svg = this.visualizer.waveformSvg;
 
         svg.on("pointerdown", (event) => {
+            // Clear any lingering press timers from earlier gestures
+            for (const [pId, t] of this.pressTimers.entries()) {
+                clearTimeout(t);
+            }
+            this.pressTimers.clear();
+
             this.activePointers.add(event.pointerId);
             if (this.activePointers.size === 1) {
                 this.isLongPress = false;
@@ -113,6 +119,9 @@ class InteractionHandler {
                 clearTimeout(timer);
                 this.pressTimers.delete(event.pointerId);
             }
+            if (this.activePointers.size === 0) {
+                this.isLongPress = false;
+            }
         });
     }
 
@@ -169,14 +178,34 @@ class InteractionHandler {
     setupKeyboardEvents() {
         window.addEventListener("keydown", (e) => {
             const startOverlay = document.getElementById('startOverlay');
-            // If the start overlay is still active / visible, ignore 'm' or escape keys
+            // If the start overlay is still active / visible, ignore shortcuts
             if (startOverlay && startOverlay.style.display !== 'none') {
                 return;
             }
-            if (e.key.toLowerCase() === "m") {
-                this.showSettings();
-            } else if (e.key === "Escape") {
+
+            // Always allow Escape to close settings modal and blur active element
+            if (e.key === "Escape") {
+                if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                    document.activeElement.blur();
+                }
                 this.hideSettings();
+                return;
+            }
+
+            // Suppress other hotkeys when input controls are focused
+            const targetTag = e.target ? e.target.tagName : '';
+            if (targetTag === 'INPUT' || targetTag === 'SELECT' || targetTag === 'TEXTAREA') {
+                return;
+            }
+
+            const key = e.key.toLowerCase();
+            if (key === "m" || key === "s") {
+                this.showSettings();
+            } else if (key === "c") {
+                this.audioEngine.clearSounds();
+            } else if (e.code === "Space" || key === " ") {
+                e.preventDefault();
+                this.audioEngine.toggleContinuousNote();
             }
         });
     }
@@ -247,15 +276,24 @@ class InteractionHandler {
     }
 
     showSettings() {
+        if (this.settingsTimeout) {
+            clearTimeout(this.settingsTimeout);
+            this.settingsTimeout = null;
+        }
         const modal = document.getElementById('settingsModal');
         modal.style.display = "flex";
-        setTimeout(() => modal.classList.add('visible'), 10);
+        void modal.offsetWidth; // Force reflow to ensure CSS transition triggers reliably
+        modal.classList.add('visible');
     }
 
     hideSettings() {
+        if (this.settingsTimeout) {
+            clearTimeout(this.settingsTimeout);
+            this.settingsTimeout = null;
+        }
         const modal = document.getElementById('settingsModal');
         modal.classList.remove('visible');
-        setTimeout(() => {
+        this.settingsTimeout = setTimeout(() => {
             if (!modal.classList.contains('visible')) {
                 modal.style.display = "none";
             }
