@@ -136,4 +136,38 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should support "s" hotkey to open settings and Escape to close settings', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Trigger settings modal via keydown 's'
+    await page.keyboard.press('s');
+    await expect(page.locator('#settingsModal')).toBeVisible();
+
+    // Close settings modal via Escape
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#settingsModal')).toBeHidden();
+  });
+
+  test('should suppress hotkeys when form control is focused', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Open settings modal
+    await page.keyboard.press('m');
+    await expect(page.locator('#settingsModal')).toBeVisible();
+
+    // Focus on select or input field
+    const scaleSelect = page.locator('#scaleSelect');
+    await scaleSelect.focus();
+
+    // Pressing 'c' or 'm' while focused should not trigger actions like clearing or closing
+    await page.keyboard.press('c');
+    await expect(page.locator('#settingsModal')).toBeVisible();
+
+    // Pressing Escape should blur the focused element and close the modal
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#settingsModal')).toBeHidden();
+  });
 });
