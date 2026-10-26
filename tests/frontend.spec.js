@@ -48,6 +48,48 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#reverbWetSlider')).toBeVisible();
     await expect(page.locator('#reverbDecaySlider')).toBeVisible();
     await expect(page.locator('#delayTimeSelect')).toBeVisible();
+    await expect(page.locator('#decaySlider')).toBeVisible();
+    await expect(page.locator('#sustainSlider')).toBeVisible();
+  });
+
+  test('should open settings using shortcut "s" and handle clear "c" and space hotkeys', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Open settings using 's'
+    await page.keyboard.press('s');
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+
+    // Close settings
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+
+    // Press Space to toggle continuous note
+    await page.keyboard.press('Space');
+
+    // Press 'c' to clear sounds
+    await page.keyboard.press('c');
+  });
+
+  test('should suppress hotkeys when form control is focused and blur on Escape', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Open settings
+    await page.keyboard.press('m');
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+
+    // Focus an enabled form select control (scaleSelect)
+    const scaleSelect = page.locator('#scaleSelect');
+    await scaleSelect.focus();
+    await expect(scaleSelect).toBeFocused();
+
+    // Press Escape to close modal and blur input
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+    await expect(scaleSelect).not.toBeFocused();
   });
 
   test('should display beta and gamma values', async ({ page }) => {
@@ -123,6 +165,8 @@ test.describe('Gyro Synth Frontend Tests', () => {
 
     // Check slider labels
     await expect(page.locator('#attackSlider')).toHaveAttribute('aria-label', 'Synth Attack Time');
+    await expect(page.locator('#decaySlider')).toHaveAttribute('aria-label', 'Synth Decay Time');
+    await expect(page.locator('#sustainSlider')).toHaveAttribute('aria-label', 'Synth Sustain Level');
     await expect(page.locator('#releaseSlider')).toHaveAttribute('aria-label', 'Synth Release Time');
     await expect(page.locator('#reverbWetSlider')).toHaveAttribute('aria-label', 'Reverb Wet Level');
     await expect(page.locator('#reverbDecaySlider')).toHaveAttribute('aria-label', 'Reverb Decay Time');
