@@ -136,4 +136,41 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should allow clear all sounds from settings modal', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    await page.keyboard.press('m');
+    await expect(page.locator('#settingsModal')).toBeVisible();
+
+    const clearBtn = page.locator('#clearAllBtn');
+    await expect(clearBtn).toBeVisible();
+    await clearBtn.click();
+
+    // Verify modal remains visible after clearing sounds
+    await expect(page.locator('#settingsModal')).toBeVisible();
+  });
+
+  test('should enable root note select when scale is selected', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    await page.keyboard.press('m');
+    await expect(page.locator('#settingsModal')).toBeVisible();
+
+    const rootSelect = page.locator('#rootNoteSelect');
+    const scaleSelect = page.locator('#scaleSelect');
+
+    // Initially scale is 'Off' so root note is disabled
+    await expect(rootSelect).toBeDisabled();
+
+    // Change scale to Major
+    await scaleSelect.selectOption('Major');
+    await expect(rootSelect).toBeEnabled();
+
+    // Change scale back to Off
+    await scaleSelect.selectOption('Off');
+    await expect(rootSelect).toBeDisabled();
+  });
 });

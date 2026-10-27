@@ -58,6 +58,12 @@ class InteractionHandler {
                 this.updateVirtualOrientation(event.clientX, event.clientY);
             }
 
+            // Clear any existing press timers to prevent duplicate firings
+            for (const [id, timer] of this.pressTimers.entries()) {
+                clearTimeout(timer);
+            }
+            this.pressTimers.clear();
+
             const timer = setTimeout(() => {
                 if (this.isLongPress) return;
                 this.isLongPress = true;
