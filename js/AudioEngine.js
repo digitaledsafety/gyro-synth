@@ -338,8 +338,29 @@ class AudioEngine {
         Tone.Destination.volume.rampTo(volumeDb, 0.1);
     }
 
-    setAttack(value) { this.attackTime = value; }
-    setRelease(value) { this.releaseTime = value; }
+    updateEnvelopeProperty(property, value) {
+        const updateSynth = (synth) => {
+            if (!synth) return;
+            if (synth.voice0 && synth.voice1) {
+                if (synth.voice0.envelope) synth.voice0.envelope[property] = value;
+                if (synth.voice1.envelope) synth.voice1.envelope[property] = value;
+            } else if (synth.envelope) {
+                synth.envelope[property] = value;
+            }
+        };
+        updateSynth(this.instrument);
+        if (this.previewLoop) updateSynth(this.previewLoop.synth);
+        this.savedLoops.forEach(loop => updateSynth(loop.synth));
+    }
+
+    setAttack(value) {
+        this.attackTime = value;
+        this.updateEnvelopeProperty('attack', value);
+    }
+    setRelease(value) {
+        this.releaseTime = value;
+        this.updateEnvelopeProperty('release', value);
+    }
     setDelayWet(value) {
         this.delayWet = value;
         if (this.delayNode) this.delayNode.wet.rampTo(this.delayWet, 0.1);
