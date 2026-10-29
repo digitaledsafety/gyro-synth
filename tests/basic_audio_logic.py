@@ -20,9 +20,15 @@ def test_js_logic_integrity():
         print("Missing Tone.FeedbackDelay")
         return False
 
-    # Check for attack and release variables/properties
+    # Check for ADSR envelope variables/properties
     if 'this.attackTime = 0.1;' not in content and 'let attackTime = 0.1;' not in content:
         print("Missing attackTime")
+        return False
+    if 'this.decayTime = 0.2;' not in content and 'let decayTime = 0.2;' not in content:
+        print("Missing decayTime")
+        return False
+    if 'this.sustainLevel = 0.5;' not in content and 'let sustainLevel = 0.5;' not in content:
+        print("Missing sustainLevel")
         return False
     if 'this.releaseTime = 0.5;' not in content and 'let releaseTime = 0.5;' not in content:
         print("Missing releaseTime")
