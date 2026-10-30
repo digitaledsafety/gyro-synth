@@ -51,6 +51,11 @@ def test_js_logic_integrity():
         print("Missing frequencyDisplay")
         return False
 
+    # Check for minimum frequency clamping
+    if 'Math.max(50, rawFreq)' not in content:
+        print("Missing Math.max(50, rawFreq) frequency clamping")
+        return False
+
     return True
 
 if __name__ == "__main__":
