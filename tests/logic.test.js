@@ -27,4 +27,14 @@ console.assert(testSnapping(350, scale) === 300 || testSnapping(350, scale) === 
 console.assert(testSnapping(50, scale) === 100, "Should snap 50 to 100");
 console.assert(testSnapping(500, scale) === 400, "Should snap 500 to 400");
 
+// Test frequency normalization and minimum clamping
+function calculateNormalizedFreq(beta, maxFrequency = 880) {
+    let rawFreq = ((Math.sin(beta * (Math.PI / 180))) * maxFrequency + maxFrequency) / 2;
+    return Math.max(50, rawFreq);
+}
+
+console.assert(calculateNormalizedFreq(0) === 440, "Beta 0 should yield 440 Hz");
+console.assert(calculateNormalizedFreq(90) === 880, "Beta 90 should yield 880 Hz");
+console.assert(calculateNormalizedFreq(-90) === 50, "Beta -90 should be clamped to 50 Hz");
+
 console.log("Snapping logic tests passed!");

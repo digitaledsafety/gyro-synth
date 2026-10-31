@@ -14,6 +14,7 @@ class InteractionHandler {
         this.doubleTapThreshold = 300;
         this.activePointers = new Set();
         this.hasRealOrientation = false;
+        this.modalTimeout = null;
 
         this.init();
     }
@@ -173,6 +174,11 @@ class InteractionHandler {
             if (startOverlay && startOverlay.style.display !== 'none') {
                 return;
             }
+            const activeTag = document.activeElement ? document.activeElement.tagName : '';
+            const targetTag = e.target ? e.target.tagName : '';
+            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(activeTag) || ['INPUT', 'SELECT', 'TEXTAREA'].includes(targetTag)) {
+                return;
+            }
             if (e.key.toLowerCase() === "m") {
                 this.showSettings();
             } else if (e.key === "Escape") {
@@ -219,6 +225,8 @@ class InteractionHandler {
         const delayTimeSelect = document.getElementById('delayTimeSelect');
         const reverbWetSlider = document.getElementById('reverbWetSlider');
         const reverbDecaySlider = document.getElementById('reverbDecaySlider');
+        const filterCutoffSlider = document.getElementById('filterCutoffSlider');
+        const filterQSlider = document.getElementById('filterQSlider');
         const visModeSelect = document.getElementById('visModeSelect');
 
         const updateScaleSettings = () => {
@@ -243,11 +251,21 @@ class InteractionHandler {
         if (reverbDecaySlider) {
             reverbDecaySlider.addEventListener('change', (e) => this.audioEngine.setReverbDecay(parseFloat(e.target.value)));
         }
+        if (filterCutoffSlider) {
+            filterCutoffSlider.addEventListener('input', (e) => this.audioEngine.setFilterCutoff(parseFloat(e.target.value)));
+        }
+        if (filterQSlider) {
+            filterQSlider.addEventListener('input', (e) => this.audioEngine.setFilterQ(parseFloat(e.target.value)));
+        }
         visModeSelect.addEventListener('change', (e) => this.visualizer.setVisMode(e.target.value));
     }
 
     showSettings() {
         const modal = document.getElementById('settingsModal');
+        if (this.modalTimeout) {
+            clearTimeout(this.modalTimeout);
+            this.modalTimeout = null;
+        }
         modal.style.display = "flex";
         setTimeout(() => modal.classList.add('visible'), 10);
     }
@@ -255,10 +273,14 @@ class InteractionHandler {
     hideSettings() {
         const modal = document.getElementById('settingsModal');
         modal.classList.remove('visible');
-        setTimeout(() => {
+        if (this.modalTimeout) {
+            clearTimeout(this.modalTimeout);
+        }
+        this.modalTimeout = setTimeout(() => {
             if (!modal.classList.contains('visible')) {
                 modal.style.display = "none";
             }
+            this.modalTimeout = null;
         }, 300);
     }
 }
