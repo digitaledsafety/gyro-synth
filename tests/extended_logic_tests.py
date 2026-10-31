@@ -70,6 +70,19 @@ def test_extended_js_logic():
         print("Missing unconditional wake lock re-acquisition check on visible state")
         return False
 
+    # Check for Filter Node and setFilterCutoff
+    if 'this.filterNode' not in content:
+        print("Missing filterNode initialization")
+        return False
+    if 'setFilterCutoff' not in content:
+        print("Missing setFilterCutoff method")
+        return False
+
+    # Check for CTM null check in createRipple
+    if 'if (!ctm) return;' not in content:
+        print("Missing ctm null safety check in createRipple")
+        return False
+
     return True
 
 if __name__ == "__main__":
