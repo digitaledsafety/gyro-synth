@@ -136,4 +136,22 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should open and close settings using openSettingsBtn', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    const openBtn = page.locator('#openSettingsBtn');
+    await expect(openBtn).toBeVisible();
+    await expect(openBtn).toHaveAttribute('aria-label', 'Open settings');
+
+    // Click open settings button
+    await openBtn.click();
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+
+    // Close settings via close button
+    await page.locator('#closeSettingsBtn').click();
+    await expect(modal).toBeHidden();
+  });
 });
