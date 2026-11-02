@@ -173,6 +173,11 @@ class InteractionHandler {
             if (startOverlay && startOverlay.style.display !== 'none') {
                 return;
             }
+            // Do not trigger hotkeys if focus is inside an interactive form control
+            const tag = document.activeElement ? document.activeElement.tagName : '';
+            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(tag)) {
+                return;
+            }
             if (e.key.toLowerCase() === "m") {
                 this.showSettings();
             } else if (e.key === "Escape") {
@@ -219,6 +224,8 @@ class InteractionHandler {
         const delayTimeSelect = document.getElementById('delayTimeSelect');
         const reverbWetSlider = document.getElementById('reverbWetSlider');
         const reverbDecaySlider = document.getElementById('reverbDecaySlider');
+        const filterCutoffSlider = document.getElementById('filterCutoffSlider');
+        const filterQSlider = document.getElementById('filterQSlider');
         const visModeSelect = document.getElementById('visModeSelect');
 
         const updateScaleSettings = () => {
@@ -242,6 +249,12 @@ class InteractionHandler {
         }
         if (reverbDecaySlider) {
             reverbDecaySlider.addEventListener('change', (e) => this.audioEngine.setReverbDecay(parseFloat(e.target.value)));
+        }
+        if (filterCutoffSlider) {
+            filterCutoffSlider.addEventListener('input', (e) => this.audioEngine.setFilterCutoff(parseFloat(e.target.value)));
+        }
+        if (filterQSlider) {
+            filterQSlider.addEventListener('input', (e) => this.audioEngine.setFilterQ(parseFloat(e.target.value)));
         }
         visModeSelect.addEventListener('change', (e) => this.visualizer.setVisMode(e.target.value));
     }

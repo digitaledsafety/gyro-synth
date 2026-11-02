@@ -49,10 +49,15 @@ class Visualizer {
         if (!this.waveformSvg) return;
 
         const svgElement = this.waveformSvg.node();
+        if (!svgElement) return;
+
+        const screenCTM = svgElement.getScreenCTM();
+        if (!screenCTM) return;
+
         const pt = svgElement.createSVGPoint();
         pt.x = x;
         pt.y = y;
-        const svgP = pt.matrixTransform(svgElement.getScreenCTM().inverse());
+        const svgP = pt.matrixTransform(screenCTM.inverse());
 
         this.waveformSvg.append("circle")
             .attr("cx", svgP.x)
