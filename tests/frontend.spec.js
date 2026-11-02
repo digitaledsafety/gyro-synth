@@ -48,6 +48,8 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#reverbWetSlider')).toBeVisible();
     await expect(page.locator('#reverbDecaySlider')).toBeVisible();
     await expect(page.locator('#delayTimeSelect')).toBeVisible();
+    await expect(page.locator('#filterCutoffSlider')).toBeVisible();
+    await expect(page.locator('#filterQSlider')).toBeVisible();
   });
 
   test('should display beta and gamma values', async ({ page }) => {
@@ -127,7 +129,32 @@ test.describe('Gyro Synth Frontend Tests', () => {
     await expect(page.locator('#reverbWetSlider')).toHaveAttribute('aria-label', 'Reverb Wet Level');
     await expect(page.locator('#reverbDecaySlider')).toHaveAttribute('aria-label', 'Reverb Decay Time');
     await expect(page.locator('#delayWetSlider')).toHaveAttribute('aria-label', 'Delay Wet Level');
+    await expect(page.locator('#filterCutoffSlider')).toHaveAttribute('aria-label', 'Filter Cutoff Frequency');
+    await expect(page.locator('#filterQSlider')).toHaveAttribute('aria-label', 'Filter Resonance Q');
     await expect(page.locator('#volumeSlider')).toHaveAttribute('aria-label', 'Master Volume Level');
+  });
+
+  test('should not close settings modal on Escape if focus is inside an interactive form control', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    await page.keyboard.press('m');
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+
+    // Focus on an input inside the modal
+    const filterInput = page.locator('#filterCutoffSlider');
+    await filterInput.focus();
+
+    // Press Escape while focused
+    await page.keyboard.press('Escape');
+    // Modal should remain visible because an input was focused
+    await expect(modal).toBeVisible();
+
+    // Unfocus and press Escape
+    await page.locator('#settingsTitle').click();
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
   });
 
   test('should not show settings modal on keypress "m" when start overlay is active', async ({ page }) => {
