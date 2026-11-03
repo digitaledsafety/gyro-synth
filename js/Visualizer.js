@@ -28,8 +28,10 @@ class Visualizer {
 
     resize() {
         if (this.waveformSvg) {
-            this.svgWidth = window.innerWidth;
-            this.svgHeight = window.innerHeight;
+            const node = this.waveformSvg.node();
+            this.svgWidth = (node && node.clientWidth) ? node.clientWidth : window.innerWidth;
+            this.svgHeight = (node && node.clientHeight) ? node.clientHeight : window.innerHeight;
+            this.barWidth = this.svgWidth / this.barCount;
 
             this.waveformSvg.attr("viewBox", `0 0 ${this.svgWidth} ${this.svgHeight}`)
                 .attr("width", this.svgWidth)
@@ -112,6 +114,7 @@ class Visualizer {
             .attr("width", barWidth * 0.8)
             .merge(bars)
             .attr("x", (d, i) => i * barWidth + (barWidth * 0.1))
+            .attr("width", barWidth * 0.8)
             .attr("y", d => this.svgHeight - Math.max(minBarHeight, d * this.svgHeight))
             .attr("height", d => Math.max(minBarHeight, d * this.svgHeight))
             .attr("fill", d => this.colorScale(d));

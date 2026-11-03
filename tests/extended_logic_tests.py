@@ -70,6 +70,21 @@ def test_extended_js_logic():
         print("Missing unconditional wake lock re-acquisition check on visible state")
         return False
 
+    # Check for 50Hz frequency clamp in getNormalizedFrequency
+    if 'Math.max(50, rawFreq)' not in content:
+        print("Missing 50Hz clamp in getNormalizedFrequency")
+        return False
+
+    # Check for updateEnvelopeProperty implementation
+    if 'updateEnvelopeProperty' not in content:
+        print("Missing updateEnvelopeProperty in AudioEngine")
+        return False
+
+    # Check for _generatingReverb serialization lock
+    if '_generatingReverb' not in content:
+        print("Missing _generatingReverb async lock in AudioEngine")
+        return False
+
     return True
 
 if __name__ == "__main__":
