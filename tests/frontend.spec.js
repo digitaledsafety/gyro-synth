@@ -136,4 +136,26 @@ test.describe('Gyro Synth Frontend Tests', () => {
     const modal = page.locator('#settingsModal');
     await expect(modal).toBeHidden();
   });
+
+  test('should ignore "m" keypress when focus is inside interactive input or select controls', async ({ page }) => {
+    await page.locator('#startButton').click();
+    await expect(page.locator('#startOverlay')).toBeHidden();
+
+    // Open settings modal
+    await page.keyboard.press('m');
+    const modal = page.locator('#settingsModal');
+    await expect(modal).toBeVisible();
+
+    // Focus on an input/select element within the modal
+    const scaleSelect = page.locator('#scaleSelect');
+    await scaleSelect.focus();
+
+    // Press 'm' while focused on the select; should NOT trigger modal toggling / re-opening
+    await page.keyboard.press('m');
+    await expect(modal).toBeVisible();
+
+    // Press Escape to close modal
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden();
+  });
 });
