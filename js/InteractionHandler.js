@@ -173,10 +173,19 @@ class InteractionHandler {
             if (startOverlay && startOverlay.style.display !== 'none') {
                 return;
             }
+
+            if (e.key === "Escape") {
+                this.hideSettings();
+                return;
+            }
+
+            const targetTag = e.target && e.target.tagName;
+            if (targetTag === 'INPUT' || targetTag === 'SELECT' || targetTag === 'TEXTAREA') {
+                return;
+            }
+
             if (e.key.toLowerCase() === "m") {
                 this.showSettings();
-            } else if (e.key === "Escape") {
-                this.hideSettings();
             }
         });
     }

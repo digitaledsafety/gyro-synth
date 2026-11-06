@@ -192,7 +192,7 @@ class AudioEngine {
         if (this.currentScaleConfig && this.currentScaleConfig.intervals && this.generatedScaleFrequencies.length > 0) {
             rawFreq = this.getSnappedFrequency(rawFreq);
         }
-        return rawFreq;
+        return Math.max(50, rawFreq);
     }
 
     /**
